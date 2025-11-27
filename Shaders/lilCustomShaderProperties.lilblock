@@ -1,4 +1,205 @@
 
         //----------------------------------------------------------------------------------------------------------------------
-        // Custom Properties
-        //_CustomVariable ("Custom Variable", Float) = 0
+        // Decal Count Control
+        [IntRange]      _DecalCount         ("Decal Count (1-10)", Range(1, 10)) = 3
+        
+        //----------------------------------------------------------------------------------------------------------------------
+        // Custom Properties - Decal 1
+        [lilToggle]     _UseDecal1          ("Use Decal 1", Int) = 0
+        _Decal1Color                        ("Color", Color) = (1,1,1,1)
+        _Decal1Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal1Tex_ST       ("Decal 1 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal1Tex_SR       ("Decal 1 Tex", Vector) = (0,0,0,0)
+        _Decal1Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal1TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal1DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal1DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal1IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal1IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal1IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal1ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal1ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal1ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal1BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal1Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal1SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 2
+        [lilToggle]     _UseDecal2          ("Use Decal 2", Int) = 0
+        _Decal2Color                        ("Color", Color) = (1,1,1,1)
+        _Decal2Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal2Tex_ST       ("Decal 2 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal2Tex_SR       ("Decal 2 Tex", Vector) = (0,0,0,0)
+        _Decal2Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal2TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal2DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal2DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal2IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal2IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal2IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal2ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal2ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal2ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal2BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal2Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal2SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 3
+        [lilToggle]     _UseDecal3          ("Use Decal 3", Int) = 0
+        _Decal3Color                        ("Color", Color) = (1,1,1,1)
+        _Decal3Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal3Tex_ST       ("Decal 3 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal3Tex_SR       ("Decal 3 Tex", Vector) = (0,0,0,0)
+        _Decal3Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal3TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal3DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal3DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal3IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal3IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal3IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal3ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal3ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal3ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal3BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal3Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal3SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 4
+        [lilToggle]     _UseDecal4          ("Use Decal 4", Int) = 0
+        _Decal4Color                        ("Color", Color) = (1,1,1,1)
+        _Decal4Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal4Tex_ST       ("Decal 4 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal4Tex_SR       ("Decal 4 Tex", Vector) = (0,0,0,0)
+        _Decal4Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal4TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal4DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal4DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal4IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal4IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal4IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal4ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal4ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal4ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal4BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal4Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal4SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 5
+        [lilToggle]     _UseDecal5          ("Use Decal 5", Int) = 0
+        _Decal5Color                        ("Color", Color) = (1,1,1,1)
+        _Decal5Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal5Tex_ST       ("Decal 5 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal5Tex_SR       ("Decal 5 Tex", Vector) = (0,0,0,0)
+        _Decal5Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal5TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal5DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal5DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal5IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal5IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal5IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal5ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal5ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal5ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal5BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal5Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal5SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 6
+        [lilToggle]     _UseDecal6          ("Use Decal 6", Int) = 0
+        _Decal6Color                        ("Color", Color) = (1,1,1,1)
+        _Decal6Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal6Tex_ST       ("Decal 6 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal6Tex_SR       ("Decal 6 Tex", Vector) = (0,0,0,0)
+        _Decal6Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal6TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal6DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal6DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal6IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal6IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal6IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal6ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal6ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal6ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal6BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal6Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal6SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 7
+        [lilToggle]     _UseDecal7          ("Use Decal 7", Int) = 0
+        _Decal7Color                        ("Color", Color) = (1,1,1,1)
+        _Decal7Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal7Tex_ST       ("Decal 7 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal7Tex_SR       ("Decal 7 Tex", Vector) = (0,0,0,0)
+        _Decal7Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal7TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal7DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal7DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal7IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal7IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal7IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal7ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal7ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal7ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal7BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal7Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal7SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 8
+        [lilToggle]     _UseDecal8          ("Use Decal 8", Int) = 0
+        _Decal8Color                        ("Color", Color) = (1,1,1,1)
+        _Decal8Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal8Tex_ST       ("Decal 8 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal8Tex_SR       ("Decal 8 Tex", Vector) = (0,0,0,0)
+        _Decal8Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal8TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal8DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal8DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal8IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal8IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal8IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal8ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal8ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal8ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal8BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal8Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal8SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 9
+        [lilToggle]     _UseDecal9          ("Use Decal 9", Int) = 0
+        _Decal9Color                        ("Color", Color) = (1,1,1,1)
+        _Decal9Tex                          ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal9Tex_ST       ("Decal 9 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal9Tex_SR       ("Decal 9 Tex", Vector) = (0,0,0,0)
+        _Decal9Position                    ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal9TexAngle     ("Angle", Float) = 0
+        [lilVec3]       _Decal9DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal9DecalSubParam                ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal9IsDecal      ("As Decal", Int) = 0
+        [lilToggle]     _Decal9IsLeftOnly   ("Left Only", Int) = 0
+        [lilToggle]     _Decal9IsRightOnly  ("Right Only", Int) = 0
+        [lilToggle]     _Decal9ShouldCopy   ("Copy", Int) = 0
+        [lilToggle]     _Decal9ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal9ShouldFlipCopy   ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal9BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal9Tex_UVMode   ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal9SyncScale    ("Sync Scale X/Y", Int) = 0
+        
+        // Custom Properties - Decal 10
+        [lilToggle]     _UseDecal10         ("Use Decal 10", Int) = 0
+        _Decal10Color                       ("Color", Color) = (1,1,1,1)
+        _Decal10Tex                         ("Texture", 2D) = "white" {}
+        [lilUVAnim]     _Decal10Tex_ST      ("Decal 10 Tex", Vector) = (1,1,0,0)
+        [lilDecalAnim]  _Decal10Tex_SR      ("Decal 10 Tex", Vector) = (0,0,0,0)
+        _Decal10Position                   ("Position (X,Y)", Vector) = (0,0,0,0)
+        [lilAngle]      _Decal10TexAngle    ("Angle", Float) = 0
+        [lilVec3]       _Decal10DecalAnimation("Animation", Vector) = (1,1,1,30)
+        _Decal10DecalSubParam               ("Sub Param", Vector) = (1,1,0.01,1)
+        [lilToggle]     _Decal10IsDecal     ("As Decal", Int) = 0
+        [lilToggle]     _Decal10IsLeftOnly  ("Left Only", Int) = 0
+        [lilToggle]     _Decal10IsRightOnly ("Right Only", Int) = 0
+        [lilToggle]     _Decal10ShouldCopy  ("Copy", Int) = 0
+        [lilToggle]     _Decal10ShouldFlipMirror ("Flip Mirror", Int) = 0
+        [lilToggle]     _Decal10ShouldFlipCopy  ("Flip Copy", Int) = 0
+        [lilEnum]       _Decal10BlendMode   ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal10Tex_UVMode  ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilToggle]     _Decal10SyncScale   ("Sync Scale X/Y", Int) = 0
