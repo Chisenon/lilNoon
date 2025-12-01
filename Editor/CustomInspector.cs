@@ -15,10 +15,7 @@ namespace lilToon
         MaterialProperty[] decalColor = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTex = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTex_ST = new MaterialProperty[MAX_DECALS];
-        MaterialProperty[] decalTex_SR = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTexAngle = new MaterialProperty[MAX_DECALS];
-        MaterialProperty[] decalDecalAnimation = new MaterialProperty[MAX_DECALS];
-        MaterialProperty[] decalDecalSubParam = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalIsDecal = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalIsLeftOnly = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalIsRightOnly = new MaterialProperty[MAX_DECALS];
@@ -37,11 +34,9 @@ namespace lilToon
 
             isCustomShader = true;
 
-            // If you want to change rendering modes in the editor, specify the shader here
             ReplaceToCustomShaders();
             isShowRenderMode = !material.shader.name.Contains("Optional");
 
-            // Load Decal Count
             decalCount = FindProperty("_DecalCount", props);
 
             // Load all decal properties (1-10)
@@ -52,10 +47,7 @@ namespace lilToon
                 decalColor[i] = FindProperty($"_Decal{num}Color", props);
                 decalTex[i] = FindProperty($"_Decal{num}Tex", props);
                 decalTex_ST[i] = FindProperty($"_Decal{num}Tex_ST", props);
-                decalTex_SR[i] = FindProperty($"_Decal{num}Tex_SR", props);
                 decalTexAngle[i] = FindProperty($"_Decal{num}TexAngle", props);
-                decalDecalAnimation[i] = FindProperty($"_Decal{num}DecalAnimation", props);
-                decalDecalSubParam[i] = FindProperty($"_Decal{num}DecalSubParam", props);
                 decalIsDecal[i] = FindProperty($"_Decal{num}IsDecal", props);
                 decalIsLeftOnly[i] = FindProperty($"_Decal{num}IsLeftOnly", props);
                 decalIsRightOnly[i] = FindProperty($"_Decal{num}IsRightOnly", props);
@@ -87,7 +79,6 @@ namespace lilToon
             m_MaterialEditor.ShaderProperty(decalCount, "Decal Count (1-10)");
             if(EditorGUI.EndChangeCheck())
             {
-                // Clamp value to 1-10
                 decalCount.floatValue = Mathf.Clamp(decalCount.floatValue, 1, MAX_DECALS);
             }
             
@@ -139,39 +130,160 @@ namespace lilToon
                         }
                     }
                     
+                    // Replaced built-in UV4Decal usage to remove SubParam UI and processing.
                     EditorGUI.BeginChangeCheck();
-                    lilEditorGUI.UV4Decal(
-                        m_MaterialEditor,
-                        decalIsDecal[index],
-                        decalIsLeftOnly[index],
-                        decalIsRightOnly[index],
-                        decalShouldCopy[index],
-                        decalShouldFlipMirror[index],
-                        decalShouldFlipCopy[index],
-                        decalTex[index],
-                        decalTex_SR[index],
-                        decalTexAngle[index],
-                        decalDecalAnimation[index],
-                        decalDecalSubParam[index],
-                        decalTex_UVMode[index]
-                    );
-                    // UV4Decalの初期化ボタンが押されたとき、追加プロパティもリセット
-                    if(EditorGUI.EndChangeCheck())
+                    // UV mode selector
+                    lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalTex_UVMode[index]);
+
+                    // Toggle decal
+                    EditorGUI.BeginChangeCheck();
+                    lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalIsDecal[index]);
+                    if(EditorGUI.EndChangeCheck() && decalIsDecal[index].floatValue == 0.0f)
                     {
-                        // Scale同期: UV4Decal内でXが変更されたらYも同じ値に
-                        if(decalSyncScale[index].floatValue == 1.0f)
+                        decalIsLeftOnly[index].floatValue = 0.0f;
+                        decalIsRightOnly[index].floatValue = 0.0f;
+                        decalShouldFlipMirror[index].floatValue = 0.0f;
+                        decalShouldCopy[index].floatValue = 0.0f;
+                        decalShouldFlipCopy[index].floatValue = 0.0f;
+                    }
+
+                    if(decalIsDecal[index].floatValue == 1.0f)
+                    {
+                        EditorGUI.indentLevel++;
+                        // Mirror mode
+                        int mirrorMode = 0;
+                        if(decalIsRightOnly[index].floatValue == 1.0f) mirrorMode = 3;
+                        if(decalShouldFlipMirror[index].floatValue == 1.0f) mirrorMode++;
+                        if(decalIsLeftOnly[index].floatValue == 1.0f) mirrorMode = 2;
+
+                        EditorGUI.BeginChangeCheck();
+                        string mmlabel = Event.current.alt ? decalIsLeftOnly[index].name + ", " + decalIsRightOnly[index].name + ", " + decalShouldFlipMirror[index].name : lilLanguageManager.GetLoc("sMirrorMode");
+                        mirrorMode = lilEditorGUI.Popup(mmlabel, mirrorMode, new string[]{lilLanguageManager.GetLoc("sMirrorModeNormal"), lilLanguageManager.GetLoc("sMirrorModeFlip"), lilLanguageManager.GetLoc("sMirrorModeLeft"), lilLanguageManager.GetLoc("sMirrorModeRight"), lilLanguageManager.GetLoc("sMirrorModeRightFlip")});
+                        if(EditorGUI.EndChangeCheck())
                         {
-                            Vector4 st = decalTex_ST[index].vectorValue;
-                            st.y = st.x;
-                            decalTex_ST[index].vectorValue = st;
+                            if(mirrorMode == 0)
+                            {
+                                decalIsLeftOnly[index].floatValue = 0.0f;
+                                decalIsRightOnly[index].floatValue = 0.0f;
+                                decalShouldFlipMirror[index].floatValue = 0.0f;
+                            }
+                            if(mirrorMode == 1)
+                            {
+                                decalIsLeftOnly[index].floatValue = 0.0f;
+                                decalIsRightOnly[index].floatValue = 0.0f;
+                                decalShouldFlipMirror[index].floatValue = 1.0f;
+                            }
+                            if(mirrorMode == 2)
+                            {
+                                decalIsLeftOnly[index].floatValue = 1.0f;
+                                decalIsRightOnly[index].floatValue = 0.0f;
+                                decalShouldFlipMirror[index].floatValue = 0.0f;
+                            }
+                            if(mirrorMode == 3)
+                            {
+                                decalIsLeftOnly[index].floatValue = 0.0f;
+                                decalIsRightOnly[index].floatValue = 1.0f;
+                                decalShouldFlipMirror[index].floatValue = 0.0f;
+                            }
+                            if(mirrorMode == 4)
+                            {
+                                decalIsLeftOnly[index].floatValue = 0.0f;
+                                decalIsRightOnly[index].floatValue = 1.0f;
+                                decalShouldFlipMirror[index].floatValue = 1.0f;
+                            }
                         }
-                        
-                        if(decalIsDecal[index].floatValue == 0.0f && decalTex_UVMode[index].floatValue == 0.0f)
+
+                        // Copy mode
+                        int copyMode = 0;
+                        if(decalShouldCopy[index].floatValue == 1.0f) copyMode = 1;
+                        if(decalShouldFlipCopy[index].floatValue == 1.0f) copyMode = 2;
+
+                        EditorGUI.BeginChangeCheck();
+                        string cmlabel = Event.current.alt ? decalShouldCopy[index].name + ", " + decalShouldFlipCopy[index].name : lilLanguageManager.GetLoc("sCopyMode");
+                        copyMode = lilEditorGUI.Popup(cmlabel, copyMode, new string[]{lilLanguageManager.GetLoc("sCopyModeNormal"), lilLanguageManager.GetLoc("sCopyModeSymmetry"), lilLanguageManager.GetLoc("sCopyModeFlip")});
+                        if(EditorGUI.EndChangeCheck())
                         {
-                            decalBlendMode[index].floatValue = 0.0f;
-                            decalColor[index].colorValue = Color.white;
-                            decalTex_ST[index].vectorValue = new Vector4(1, 1, 0, 0);
+                            if(copyMode == 0)
+                            {
+                                decalShouldCopy[index].floatValue = 0.0f;
+                                decalShouldFlipCopy[index].floatValue = 0.0f;
+                            }
+                            if(copyMode == 1)
+                            {
+                                decalShouldCopy[index].floatValue = 1.0f;
+                                decalShouldFlipCopy[index].floatValue = 0.0f;
+                            }
+                            if(copyMode == 2)
+                            {
+                                decalShouldCopy[index].floatValue = 1.0f;
+                                decalShouldFlipCopy[index].floatValue = 1.0f;
+                            }
                         }
+
+                        // Load scale & offset
+                        float scaleX = decalTex[index].textureScaleAndOffset.x;
+                        float scaleY = decalTex[index].textureScaleAndOffset.y;
+                        float posX = decalTex[index].textureScaleAndOffset.z;
+                        float posY = decalTex[index].textureScaleAndOffset.w;
+
+                        if(scaleX==0.0f)
+                        {
+                            posX = 0.5f;
+                            scaleX = 0.000001f;
+                        }
+                        else
+                        {
+                            // Convert UV_ST.z to Position: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
+                            posX = (0.5f - posX) / scaleX + 0.5f;
+                            scaleX = 1.0f / scaleX;
+                        }
+
+                        if(scaleY==0.0f)
+                        {
+                            posY = 0.5f;
+                            scaleY = 0.000001f;
+                        }
+                        else
+                        {
+                            // Convert UV_ST.w to Position: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
+                            posY = (0.5f - posY) / scaleY + 0.5f;
+                            scaleY = 1.0f / scaleY;
+                        }
+                        scaleX = lilEditorGUI.RoundFloat1000000(scaleX);
+                        scaleY = lilEditorGUI.RoundFloat1000000(scaleY);
+                        posX = lilEditorGUI.RoundFloat1000000(posX);
+                        posY = lilEditorGUI.RoundFloat1000000(posY);
+
+                        EditorGUI.BeginChangeCheck();
+                        if(copyMode > 0)
+                        {
+                            if(posX < 0.5f) posX = 1.0f - posX;
+                            posX = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.z" : lilLanguageManager.GetLoc("sPositionX"), posX, 0.5f, 1.0f);
+                        }
+                        else
+                        {
+                            posX = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.z" : lilLanguageManager.GetLoc("sPositionX"), posX, 0.0f, 1.0f);
+                        }
+
+                        posY = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.w" : lilLanguageManager.GetLoc("sPositionY"), posY, 0.0f, 1.0f);
+                        scaleX = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.x" : lilLanguageManager.GetLoc("sScaleX"), scaleX, -1.0f, 1.0f);
+                        scaleY = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.y" : lilLanguageManager.GetLoc("sScaleY"), scaleY, -1.0f, 1.0f);
+                        if(EditorGUI.EndChangeCheck())
+                        {
+                            if(scaleX == 0.0f) scaleX = 0.000001f;
+                            if(scaleY == 0.0f) scaleY = 0.000001f;
+
+                            scaleX = 1.0f / scaleX;
+                            scaleY = 1.0f / scaleY;
+                            // Convert Position to UV_ST offset: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
+                            posX = (-(posX - 0.5f) * scaleX) + 0.5f;
+                            posY = (-(posY - 0.5f) * scaleY) + 0.5f;
+
+                            decalTex[index].textureScaleAndOffset = new Vector4(scaleX, scaleY, posX, posY);
+                        }
+
+                        lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalTexAngle[index]);
+                        EditorGUI.indentLevel--;
                     }
                     
                     m_MaterialEditor.ShaderProperty(decalBlendMode[index], "Blend Mode");
