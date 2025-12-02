@@ -72,7 +72,6 @@ namespace lilToon
             if(isShowDecalCountControl)
             {
                 EditorGUILayout.BeginVertical(boxOuter);
-                EditorGUILayout.LabelField("", customToggleFont);
                 EditorGUILayout.BeginVertical(boxInnerHalf);
                 
                 EditorGUI.BeginChangeCheck();
