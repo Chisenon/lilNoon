@@ -15,6 +15,10 @@ namespace lilToon
         MaterialProperty[] decalTex = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTex_ST = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTexAngle = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalUseAudioLink = new MaterialProperty[MAX_DECALS];
+        // AudioLink properties for decals
+        MaterialProperty[] decalAudioLinkScaleBand = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkScale = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalShouldCopy = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalShouldFlipCopy = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalBlendMode = new MaterialProperty[MAX_DECALS];
@@ -25,6 +29,9 @@ namespace lilToon
         MaterialProperty[] decalAnimation = new MaterialProperty[MAX_DECALS];
 
         private static bool[] isShowDecal = new bool[MAX_DECALS];
+        private static bool[] isShowDecalAudioLink = new bool[MAX_DECALS];
+        // Toggle to show hitbox debug overlays (arrow, checkbox, label)
+        private static bool showHitboxDebug = true;
         private static bool isShowDecalCountControl = true;
         private const string shaderName = "ChiseNote/MoreDecal";
 
@@ -46,6 +53,10 @@ namespace lilToon
                 decalTex[i] = FindProperty($"_Decal{num}Tex", props);
                 decalTex_ST[i] = FindProperty($"_Decal{num}Tex_ST", props);
                 decalTexAngle[i] = FindProperty($"_Decal{num}TexAngle", props);
+                decalUseAudioLink[i] = FindProperty($"_Decal{num}UseAudioLink", props, false);
+                // Load AudioLink-related properties (ScaleBand and Scale)
+                decalAudioLinkScaleBand[i] = FindProperty($"_AudioLinkDecal{num}ScaleBand", props, false);
+                decalAudioLinkScale[i] = FindProperty($"_AudioLinkDecal{num}Scale", props, false);
                 decalShouldCopy[i] = FindProperty($"_Decal{num}ShouldCopy", props);
                 decalShouldFlipCopy[i] = FindProperty($"_Decal{num}ShouldFlipCopy", props);
                 decalBlendMode[i] = FindProperty($"_Decal{num}BlendMode", props);
@@ -55,6 +66,56 @@ namespace lilToon
                 decalUseAnimation[i] = FindProperty($"_Decal{num}UseAnimation", props);
                 decalAnimation[i] = FindProperty($"_Decal{num}TexDecalAnimation", props);
             }
+        }
+
+        private bool FoldoutWithToggle(string label, bool foldout, MaterialProperty toggleProp)
+        {
+            Rect rect = EditorGUILayout.GetControlRect(false, 22);
+            GUI.Box(rect, "", customBox);
+            
+            Rect innerRect = new Rect(rect.x + 4, rect.y + 2, rect.width - 8, rect.height - 4);
+            
+            const float arrowWidth = 14f;
+            const float checkboxWidth = 18f;
+            const float spacing = 2f;
+            const float visualOffset = 2.0f;
+
+            Rect drawRect = new Rect(innerRect.x + arrowWidth + visualOffset, innerRect.y, checkboxWidth, checkboxWidth);
+            Rect labelRect = new Rect(drawRect.xMax + spacing, innerRect.y, innerRect.width - (arrowWidth + checkboxWidth + spacing + visualOffset), innerRect.height);
+            
+            if(toggleProp != null)
+            {
+                bool toggleValue = toggleProp.floatValue == 1.0f;
+                
+                // Handle toggle click
+                if (Event.current.type == EventType.MouseDown && drawRect.Contains(Event.current.mousePosition))
+                {
+                    toggleProp.floatValue = toggleValue ? 0.0f : 1.0f;
+                    Event.current.Use();
+                    GUI.changed = true;
+                    toggleValue = !toggleValue;
+                }
+
+                // Draw debug overlays and toggle
+                int originalIndent = EditorGUI.indentLevel;
+                EditorGUI.indentLevel = 0;
+                
+                if (showHitboxDebug)
+                {
+                    EditorGUI.DrawRect(new Rect(innerRect.x, innerRect.y, arrowWidth, innerRect.height), new Color(1f, 0f, 0f, 0.16f));
+                    EditorGUI.DrawRect(drawRect, new Color(1f, 1f, 0f, 0.18f));
+                    EditorGUI.DrawRect(labelRect, new Color(0f, 0f, 1f, 0.08f));
+                }
+
+                EditorGUI.Toggle(drawRect, toggleValue);
+                EditorGUI.indentLevel = originalIndent;
+            }
+            
+            // Draw foldout arrow and label
+            bool newFoldout = EditorGUI.Foldout(rect, foldout, "", true, EditorStyles.foldout);
+            EditorGUI.LabelField(labelRect, label, EditorStyles.boldLabel);
+            
+            return newFoldout;
         }
 
         protected override void DrawCustomProperties(Material material)
@@ -225,6 +286,41 @@ namespace lilToon
                     }
                     
                     lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalTexAngle[index]);
+
+                    // AudioLink controls with Foldout+Toggle header (Poiyomi-style)
+                    if(decalUseAudioLink[index] != null)
+                    {
+                        EditorGUILayout.Space(2);
+                        // Modified function used here
+                        isShowDecalAudioLink[index] = FoldoutWithToggle("AudioLink", isShowDecalAudioLink[index], decalUseAudioLink[index]);
+                        
+                        if(isShowDecalAudioLink[index])
+                        {
+                            GUILayout.BeginHorizontal();
+                            EditorGUILayout.BeginVertical(boxOuter);
+                            EditorGUILayout.BeginVertical(boxInnerHalf);
+                            
+                            int originalIndent = EditorGUI.indentLevel;
+                            EditorGUI.indentLevel = 0;
+                            
+                            if(decalAudioLinkScaleBand[index] != null)
+                            {
+                                Rect rBand = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+                                m_MaterialEditor.ShaderProperty(rBand, decalAudioLinkScaleBand[index], "Scale Band");
+                            }
+                            if(decalAudioLinkScale[index] != null)
+                            {
+                                Rect rScale = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+                                m_MaterialEditor.ShaderProperty(rScale, decalAudioLinkScale[index], "Scale (minX,minY,maxX,maxY)");
+                            }
+                            
+                            EditorGUI.indentLevel = originalIndent;
+                            
+                            EditorGUILayout.EndVertical();
+                            EditorGUILayout.EndVertical();
+                            GUILayout.EndHorizontal();
+                        }
+                    }
                     
                     DrawLine();
                     
@@ -270,6 +366,8 @@ namespace lilToon
                         }
                         
                         EditorGUI.indentLevel--;
+                        DrawLine();
+                        
                     }
 
                     DrawLine();
@@ -347,23 +445,6 @@ namespace lilToon
             ltsmfur     = Shader.Find("Hidden/" + shaderName + "/MultiFur");
             ltsmgem     = Shader.Find("Hidden/" + shaderName + "/MultiGem");
         }
-
-        // You can create a menu like this
-        /*
-        [MenuItem("Assets/TemplateFull/Convert material to custom shader", false, 1100)]
-        private static void ConvertMaterialToCustomShaderMenu()
-        {
-            if(Selection.objects.Length == 0) return;
-            TemplateFullInspector inspector = new TemplateFullInspector();
-            for(int i = 0; i < Selection.objects.Length; i++)
-            {
-                if(Selection.objects[i] is Material)
-                {
-                    inspector.ConvertMaterialToCustomShader((Material)Selection.objects[i]);
-                }
-            }
-        }
-        */
     }
 }
 #endif

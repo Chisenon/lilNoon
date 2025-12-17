@@ -9,6 +9,9 @@
         _Decal1Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal1Tex_ST       ("Decal 1 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal1TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal1UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal1ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal1Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal1UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal1TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal1ShouldCopy   ("Copy", Int) = 0
@@ -23,6 +26,9 @@
         _Decal2Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal2Tex_ST       ("Decal 2 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal2TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal2UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal2ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal2Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal2UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal2TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal2ShouldCopy   ("Copy", Int) = 0
@@ -37,6 +43,9 @@
         _Decal3Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal3Tex_ST       ("Decal 3 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal3TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal3UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal3ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal3Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal3UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal3TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal3ShouldCopy   ("Copy", Int) = 0
@@ -51,6 +60,9 @@
         _Decal4Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal4Tex_ST       ("Decal 4 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal4TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal4UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal4ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal4Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal4UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal4TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal4ShouldCopy   ("Copy", Int) = 0
@@ -65,6 +77,9 @@
         _Decal5Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal5Tex_ST       ("Decal 5 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal5TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal5UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal5ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal5Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal5UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal5TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal5ShouldCopy   ("Copy", Int) = 0
@@ -79,6 +94,9 @@
         _Decal6Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal6Tex_ST       ("Decal 6 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal6TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal6UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal6ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal6Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal6UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal6TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal6ShouldCopy   ("Copy", Int) = 0
@@ -93,6 +111,9 @@
         _Decal7Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal7Tex_ST       ("Decal 7 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal7TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal7UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal7ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal7Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal7UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal7TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal7ShouldCopy   ("Copy", Int) = 0
@@ -107,6 +128,9 @@
         _Decal8Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal8Tex_ST       ("Decal 8 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal8TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal8UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal8ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal8Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal8UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal8TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal8ShouldCopy   ("Copy", Int) = 0
@@ -121,6 +145,9 @@
         _Decal9Tex                          ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal9Tex_ST       ("Decal 9 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal9TexAngle     ("Angle", Float) = 0
+        [lilToggle]     _Decal9UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal9ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal9Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal9UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal9TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal9ShouldCopy   ("Copy", Int) = 0
@@ -135,6 +162,9 @@
         _Decal10Tex                         ("Texture", 2D) = "white" {}
         [lilUVAnim]     _Decal10Tex_ST      ("Decal 10 Tex", Vector) = (1,1,0,0)
         [lilAngle]      _Decal10TexAngle    ("Angle", Float) = 0
+        [lilToggle]     _Decal10UseAudioLink ("AudioLink", Int) = 0
+        [lilEnum]       _AudioLinkDecal10ScaleBand ("Scale Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+                        _AudioLinkDecal10Scale ("Scale (minX,minY,maxX,maxY)", Vector) = (0,0,0,0)
         [lilToggle]     _Decal10UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal10TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal10ShouldCopy  ("Copy", Int) = 0
