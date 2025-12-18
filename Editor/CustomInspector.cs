@@ -16,9 +16,19 @@ namespace lilToon
         MaterialProperty[] decalTex_ST = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalTexAngle = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalUseAudioLink = new MaterialProperty[MAX_DECALS];
+
         // AudioLink properties for decals
         MaterialProperty[] decalAudioLinkScaleBand = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkScale = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkSideBand = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkSideMon = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkSideMonMin = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkSideMonMax = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkRotationBand = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkRotation = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkChronoRotationBand = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkChronoMotionType = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkChronoRotationSpeed = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalShouldCopy = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalShouldFlipCopy = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalBlendMode = new MaterialProperty[MAX_DECALS];
@@ -30,6 +40,7 @@ namespace lilToon
 
         private static bool[] isShowDecal = new bool[MAX_DECALS];
         private static bool[] isShowDecalAudioLink = new bool[MAX_DECALS];
+        
         // Toggle to show hitbox debug overlays (arrow, checkbox, label)
         private static bool showHitboxDebug = true;
         private static bool isShowDecalCountControl = true;
@@ -54,9 +65,19 @@ namespace lilToon
                 decalTex_ST[i] = FindProperty($"_Decal{num}Tex_ST", props);
                 decalTexAngle[i] = FindProperty($"_Decal{num}TexAngle", props);
                 decalUseAudioLink[i] = FindProperty($"_Decal{num}UseAudioLink", props, false);
+                
                 // Load AudioLink-related properties (ScaleBand and Scale)
                 decalAudioLinkScaleBand[i] = FindProperty($"_AudioLinkDecal{num}ScaleBand", props, false);
                 decalAudioLinkScale[i] = FindProperty($"_AudioLinkDecal{num}Scale", props, false);
+                decalAudioLinkSideBand[i] = FindProperty($"_AudioLinkDecal{num}SideBand", props, false);
+                decalAudioLinkSideMon[i] = FindProperty($"_AudioLinkDecal{num}SideMon", props, false);
+                decalAudioLinkSideMonMin[i] = FindProperty($"_AudioLinkDecal{num}SideMonMin", props, false);
+                decalAudioLinkSideMonMax[i] = FindProperty($"_AudioLinkDecal{num}SideMonMax", props, false);
+                decalAudioLinkRotationBand[i] = FindProperty($"_AudioLinkDecal{num}RotationBand", props, false);
+                decalAudioLinkRotation[i] = FindProperty($"_AudioLinkDecal{num}Rotation", props, false);
+                decalAudioLinkChronoRotationBand[i] = FindProperty($"_AudioLinkDecal{num}ChronoRotationBand", props, false);
+                decalAudioLinkChronoMotionType[i] = FindProperty($"_AudioLinkDecal{num}ChronoMotionType", props, false);
+                decalAudioLinkChronoRotationSpeed[i] = FindProperty($"_AudioLinkDecal{num}ChronoRotationSpeed", props, false);
                 decalShouldCopy[i] = FindProperty($"_Decal{num}ShouldCopy", props);
                 decalShouldFlipCopy[i] = FindProperty($"_Decal{num}ShouldFlipCopy", props);
                 decalBlendMode[i] = FindProperty($"_Decal{num}BlendMode", props);
@@ -296,29 +317,180 @@ namespace lilToon
                         
                         if(isShowDecalAudioLink[index])
                         {
-                            GUILayout.BeginHorizontal();
                             EditorGUILayout.BeginVertical(boxOuter);
                             EditorGUILayout.BeginVertical(boxInnerHalf);
-                            
+
                             int originalIndent = EditorGUI.indentLevel;
                             EditorGUI.indentLevel = 0;
-                            
+
                             if(decalAudioLinkScaleBand[index] != null)
                             {
-                                Rect rBand = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
-                                m_MaterialEditor.ShaderProperty(rBand, decalAudioLinkScaleBand[index], "Scale Band");
+                                int scaleBand = (int)decalAudioLinkScaleBand[index].floatValue;
+                                string[] bandOptions = new string[] {"Bass","Low Mid","High Mid","Treble","Volume"};
+                                EditorGUI.BeginChangeCheck();
+                                scaleBand = EditorGUILayout.Popup("Scale Band", scaleBand, bandOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkScaleBand[index].floatValue = scaleBand;
+                                }
                             }
                             if(decalAudioLinkScale[index] != null)
                             {
-                                Rect rScale = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
-                                m_MaterialEditor.ShaderProperty(rScale, decalAudioLinkScale[index], "Scale (minX,minY,maxX,maxY)");
+                                // Split Vector4 into two Vector2 fields (minX/maxX, minY/maxY)
+                                Vector4 scaleVec = decalAudioLinkScale[index].vectorValue;
+
+                                EditorGUI.BeginChangeCheck();
+
+                                // X Scale (minX, maxX)
+                                var positionVec2X = EditorGUILayout.GetControlRect();
+                                float labelWidth = EditorGUIUtility.labelWidth;
+                                var labelRectX = new Rect(positionVec2X.x, positionVec2X.y, labelWidth, positionVec2X.height);
+                                EditorGUI.PrefixLabel(labelRectX, new GUIContent(Event.current.alt ? decalAudioLinkScale[index].name + ".xz" : "Scale X (min / max)"));
+
+                                var vecRectX = new Rect(positionVec2X.x + labelWidth, positionVec2X.y, positionVec2X.width - labelWidth, positionVec2X.height);
+                                Vector2 audioScaleX = new Vector2(scaleVec.x, scaleVec.z);
+                                audioScaleX = EditorGUI.Vector2Field(vecRectX, GUIContent.none, audioScaleX);
+
+                                // Y Scale (minY, maxY)
+                                var positionVec2Y = EditorGUILayout.GetControlRect();
+                                var labelRectY = new Rect(positionVec2Y.x, positionVec2Y.y, labelWidth, positionVec2Y.height);
+                                EditorGUI.PrefixLabel(labelRectY, new GUIContent(Event.current.alt ? decalAudioLinkScale[index].name + ".yw" : "Scale Y (min / max)"));
+
+                                var vecRectY = new Rect(positionVec2Y.x + labelWidth, positionVec2Y.y, positionVec2Y.width - labelWidth, positionVec2Y.height);
+                                Vector2 audioScaleY = new Vector2(scaleVec.y, scaleVec.w);
+                                audioScaleY = EditorGUI.Vector2Field(vecRectY, GUIContent.none, audioScaleY);
+
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkScale[index].vectorValue = new Vector4(audioScaleX.x, audioScaleY.x, audioScaleX.y, audioScaleY.y);
+                                }
                             }
-                            
+
+                            DrawLine();
+
+
+                            // --- Side controls (Side Band + Side Monitor min/max) ---
+                            if(decalAudioLinkSideBand[index] != null)
+                            {
+                                int sideBand = (int)decalAudioLinkSideBand[index].floatValue;
+                                string[] bandOptions = new string[] {"Bass","Low Mid","High Mid","Treble","Volume"};
+                                EditorGUI.BeginChangeCheck();
+                                sideBand = EditorGUILayout.Popup("Side Band", sideBand, bandOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkSideBand[index].floatValue = sideBand;
+                                }
+                            }
+
+                            // Side Mod Min/Max (L / R / D / U)
+                            GUIContent[] sideSubLabels = new GUIContent[] { new GUIContent("L"), new GUIContent("R"), new GUIContent("D"), new GUIContent("U") };
+                            Vector4 minVec = Vector4.zero;
+                            Vector4 maxVec = Vector4.zero;
+                            if(decalAudioLinkSideMonMin[index] != null) minVec = decalAudioLinkSideMonMin[index].vectorValue;
+                            if(decalAudioLinkSideMonMax[index] != null) maxVec = decalAudioLinkSideMonMax[index].vectorValue;
+
+                            EditorGUI.BeginChangeCheck();
+
+                            // Min row
+                            var posMin = EditorGUILayout.GetControlRect();
+                            var labRectMin = new Rect(posMin.x, posMin.y, EditorGUIUtility.labelWidth, posMin.height);
+                            EditorGUI.PrefixLabel(labRectMin, new GUIContent("Side Mod Min"));
+                            var vRectMin = new Rect(posMin.x + EditorGUIUtility.labelWidth, posMin.y, posMin.width - EditorGUIUtility.labelWidth, posMin.height);
+                            float[] minVals = new float[] { minVec.x, minVec.y, minVec.z, minVec.w };
+                            EditorGUI.MultiFloatField(vRectMin, GUIContent.none, sideSubLabels, minVals);
+
+                            // Max row
+                            var posMax = EditorGUILayout.GetControlRect();
+                            var labRectMax = new Rect(posMax.x, posMax.y, EditorGUIUtility.labelWidth, posMax.height);
+                            EditorGUI.PrefixLabel(labRectMax, new GUIContent("Side Mod Max"));
+                            var vRectMax = new Rect(posMax.x + EditorGUIUtility.labelWidth, posMax.y, posMax.width - EditorGUIUtility.labelWidth, posMax.height);
+                            float[] maxVals = new float[] { maxVec.x, maxVec.y, maxVec.z, maxVec.w };
+                            EditorGUI.MultiFloatField(vRectMax, GUIContent.none, sideSubLabels, maxVals);
+
+                            if(EditorGUI.EndChangeCheck())
+                            {
+                                if(decalAudioLinkSideMonMin[index] != null)
+                                    decalAudioLinkSideMonMin[index].vectorValue = new Vector4(minVals[0], minVals[1], minVals[2], minVals[3]);
+                                if(decalAudioLinkSideMonMax[index] != null)
+                                    decalAudioLinkSideMonMax[index].vectorValue = new Vector4(maxVals[0], maxVals[1], maxVals[2], maxVals[3]);
+                            }
+
+                            DrawLine();
+
+                            // Rotation controls (Rotation Band + Rotation min/max)
+                            if(decalAudioLinkRotationBand[index] != null)
+                            {
+                                int rotationBand = (int)decalAudioLinkRotationBand[index].floatValue;
+                                string[] bandOptions = new string[] {"Bass","Low Mid","High Mid","Treble","Volume"};
+                                EditorGUI.BeginChangeCheck();
+                                rotationBand = EditorGUILayout.Popup("Rotation Band", rotationBand, bandOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkRotationBand[index].floatValue = rotationBand;
+                                }
+                            }
+                            if(decalAudioLinkRotation[index] != null)
+                            {
+                                Vector4 rotVec = decalAudioLinkRotation[index].vectorValue; // x=min, y=max
+                                EditorGUI.BeginChangeCheck();
+
+                                var posRot = EditorGUILayout.GetControlRect();
+                                float lwRot = EditorGUIUtility.labelWidth;
+                                var labRectRot = new Rect(posRot.x, posRot.y, lwRot, posRot.height);
+                                EditorGUI.PrefixLabel(labRectRot, new GUIContent(Event.current.alt ? decalAudioLinkRotation[index].name + ".xy" : "Rotation (min / max)"));
+
+                                var vRectRot = new Rect(posRot.x + lwRot, posRot.y, posRot.width - lwRot, posRot.height);
+                                Vector2 rotVals = new Vector2(rotVec.x, rotVec.y);
+                                rotVals = EditorGUI.Vector2Field(vRectRot, GUIContent.none, rotVals);
+
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkRotation[index].vectorValue = new Vector4(rotVals.x, rotVals.y, rotVec.z, rotVec.w);
+                                }
+                            }
+
+                            DrawLine();
+
+                            // Chrono Rotation controls (band / motion type / speed)
+                            if(decalAudioLinkChronoRotationBand[index] != null)
+                            {
+                                int chronoRotationBand = (int)decalAudioLinkChronoRotationBand[index].floatValue;
+                                string[] bandOptions = new string[] {"Bass","Low Mid","High Mid","Treble","Volume"};
+                                EditorGUI.BeginChangeCheck();
+                                chronoRotationBand = EditorGUILayout.Popup("Chrono Rotation Band", chronoRotationBand, bandOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkChronoRotationBand[index].floatValue = chronoRotationBand;
+                                }
+                            }
+
+                            if(decalAudioLinkChronoMotionType[index] != null)
+                            {
+                                int curType = (int)decalAudioLinkChronoMotionType[index].floatValue;
+                                string[] chronoOptions = new string[] {"None","Sine","Step","PingPong","Random"};
+                                EditorGUI.BeginChangeCheck();
+                                curType = EditorGUILayout.Popup(Event.current.alt ? decalAudioLinkChronoMotionType[index].name + ".x" : "Chrono motion type", curType, chronoOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkChronoMotionType[index].floatValue = curType;
+                                }
+                            }
+
+                            if(decalAudioLinkChronoRotationSpeed[index] != null)
+                            {
+                                float speed = decalAudioLinkChronoRotationSpeed[index].floatValue;
+                                EditorGUI.BeginChangeCheck();
+                                speed = EditorGUILayout.FloatField(Event.current.alt ? decalAudioLinkChronoRotationSpeed[index].name + ".x" : "Chrono Rotation Speed", speed);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkChronoRotationSpeed[index].floatValue = speed;
+                                }
+                            }
+
                             EditorGUI.indentLevel = originalIndent;
-                            
+
                             EditorGUILayout.EndVertical();
                             EditorGUILayout.EndVertical();
-                            GUILayout.EndHorizontal();
                         }
                     }
                     
