@@ -42,24 +42,16 @@ namespace lilToon
         private static bool[] isShowDecalTransform = new bool[MAX_DECALS];
         private static bool[] isShowDecalAudioLink = new bool[MAX_DECALS];
         private static bool[] isShowDecalAnimation = new bool[MAX_DECALS];
-        
-        // (debug overlays removed)
         private static bool isShowDecalCountControl = true;
-        // When true the Add Decal slider range is 0..MAX_DECALS, otherwise 0..100
         private static bool decalCountLock = true;
         private const string shaderName = "ChiseNote/MoreDecal";
 
         protected override void LoadCustomProperties(MaterialProperty[] props, Material material)
         {
-
             isCustomShader = true;
-
             ReplaceToCustomShaders();
             isShowRenderMode = !material.shader.name.Contains("Optional");
-
             decalCount = FindProperty("_DecalCount", props);
-
-            // Load all decal properties (1-10)
             for(int i = 0; i < MAX_DECALS; i++)
             {
                 int num = i + 1;
@@ -68,8 +60,6 @@ namespace lilToon
                 decalTex_ST[i] = FindProperty($"_Decal{num}Tex_ST", props);
                 decalTexAngle[i] = FindProperty($"_Decal{num}TexAngle", props);
                 decalUseAudioLink[i] = FindProperty($"_Decal{num}UseAudioLink", props, false);
-                
-                // Load AudioLink-related properties (ScaleBand and Scale)
                 decalAudioLinkScaleBand[i] = FindProperty($"_AudioLinkDecal{num}ScaleBand", props, false);
                 decalAudioLinkScale[i] = FindProperty($"_AudioLinkDecal{num}Scale", props, false);
                 decalAudioLinkSideBand[i] = FindProperty($"_AudioLinkDecal{num}SideBand", props, false);
@@ -95,11 +85,7 @@ namespace lilToon
         private bool FoldoutWithToggle(string label, bool foldout, MaterialProperty toggleProp, float indentMultiplier = 1f)
         {
             Rect rect = EditorGUILayout.GetControlRect(true, 22);
-            
-            // Calculate indent offset
             float indent = EditorGUI.indentLevel * 15f * indentMultiplier;
-            
-            // Apply indent to box and all inner elements
             Rect boxRect = new Rect(rect.x + indent, rect.y, rect.width - indent, rect.height);
             GUI.Box(boxRect, "", customBox);
             
@@ -109,8 +95,7 @@ namespace lilToon
             const float checkboxWidth = 18f;
             const float spacing = 0f;
             const float visualOffset = 2.0f;
-            const float arrowOffset = 12.0f; // Fine-tune arrow position
-
+            const float arrowOffset = 12.0f;
             float effectiveCheckboxWidth = (toggleProp != null) ? checkboxWidth : 0f;
 
             Rect arrowRect = new Rect(innerRect.x + arrowOffset, innerRect.y, arrowWidth, innerRect.height);
@@ -120,8 +105,6 @@ namespace lilToon
             if(toggleProp != null)
             {
                 bool toggleValue = toggleProp.floatValue == 1.0f;
-                
-                // Handle toggle click
                 if (Event.current.type == EventType.MouseDown && drawRect.Contains(Event.current.mousePosition))
                 {
                     toggleProp.floatValue = toggleValue ? 0.0f : 1.0f;
@@ -129,15 +112,11 @@ namespace lilToon
                     GUI.changed = true;
                     toggleValue = !toggleValue;
                 }
-
-                // Draw toggle
                 int originalIndent = EditorGUI.indentLevel;
                 EditorGUI.indentLevel = 0;
                 EditorGUI.Toggle(drawRect, toggleValue);
                 EditorGUI.indentLevel = originalIndent;
             }
-            
-            // Draw foldout arrow and label
             int originalIndentForFoldout = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
             bool newFoldout = EditorGUI.Foldout(arrowRect, foldout, "", true, EditorStyles.foldout);
@@ -149,38 +128,18 @@ namespace lilToon
 
         protected override void DrawCustomProperties(Material material)
         {
-            // GUIStyles Name   Description
-            // ---------------- ------------------------------------
-            // boxOuter         outer box
-            // boxInnerHalf     inner box
-            // boxInner         inner box without label
-            // customBox        box (similar to unity default box)
-            // customToggleFont label for box
-
-            // Decal Count Control at Top
             isShowDecalCountControl = Foldout("Decal Count Control", "Decal Count Control", isShowDecalCountControl);
             if(isShowDecalCountControl)
             {
                 EditorGUILayout.BeginVertical(boxOuter);
                 EditorGUILayout.BeginVertical(boxInnerHalf);
-
                 EditorGUI.BeginChangeCheck();
-
-                // Custom layout: [Slider][Lock Icon][Toggle Checkbox]
                 EditorGUILayout.BeginHorizontal();
-
-                    // Determine dynamic max based on lock
                     int maxVal = decalCountLock ? MAX_DECALS : 100;
-
-                    // Label describing the control and current range
                     string rangeLabel = decalCountLock ? $"Add Decal (0-{MAX_DECALS})" : "Add Decal (0-100)";
                     EditorGUILayout.LabelField(rangeLabel, GUILayout.Width(140));
-
-                    // Integer slider
                     int currentVal = Mathf.RoundToInt(decalCount.floatValue);
                     int newVal = EditorGUILayout.IntSlider(currentVal, 0, maxVal);
-
-                    // Toggle checkbox (lock state)
                     decalCountLock = EditorGUILayout.Toggle(decalCountLock, GUILayout.Width(18));
 
                 EditorGUILayout.EndHorizontal();
@@ -193,11 +152,7 @@ namespace lilToon
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.EndVertical();
             }
-
-            // Get current decal count
             int currentDecalCount = Mathf.RoundToInt(decalCount.floatValue);
-
-            // Draw decal sections dynamically based on count (only if count > 0)
             if(currentDecalCount > 0)
             {
                 for(int i = 0; i < currentDecalCount; i++)
@@ -226,16 +181,12 @@ namespace lilToon
                 lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalBlendMode[index]);
                 
                 DrawLine();
-
-                // Transform foldout (inner style without bar)
                 EditorGUI.indentLevel++;
                 isShowDecalTransform[index] = FoldoutWithToggle("Transform", isShowDecalTransform[index], null, 0f);
                 if(isShowDecalTransform[index])
                 {
                     EditorGUILayout.BeginVertical(boxInner);
-
-                    // Copy mode
-                        int copyMode = 0;
+                    int copyMode = 0;
                         if(decalShouldCopy[index].floatValue == 1.0f) copyMode = 1;
                         if(decalShouldFlipCopy[index].floatValue == 1.0f) copyMode = 2;
 
@@ -260,8 +211,6 @@ namespace lilToon
                                 decalShouldFlipCopy[index].floatValue = 1.0f;
                             }
                         }
-
-                    // Load scale & offset
                     float scaleX = decalTex[index].textureScaleAndOffset.x;
                     float scaleY = decalTex[index].textureScaleAndOffset.y;
                     float posX = decalTex[index].textureScaleAndOffset.z;
@@ -274,7 +223,6 @@ namespace lilToon
                     }
                     else
                     {
-                        // Convert UV_ST.z to Position: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
                         posX = (0.5f - posX) / scaleX + 0.5f;
                         scaleX = 1.0f / scaleX;
                     }
@@ -286,7 +234,6 @@ namespace lilToon
                     }
                     else
                     {
-                        // Convert UV_ST.w to Position: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
                         posY = (0.5f - posY) / scaleY + 0.5f;
                         scaleY = 1.0f / scaleY;
                     }
@@ -307,13 +254,10 @@ namespace lilToon
                     }
 
                     posY = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.w" : lilLanguageManager.GetLoc("sPositionY"), posY, 0.0f, 1.0f);
-                    
-                    // Sync Scale toggle
                     m_MaterialEditor.ShaderProperty(decalSyncScale[index], "Sync Scale");
                     
                     if(decalSyncScale[index].floatValue == 1.0f)
                     {
-                        // Synchronized scale slider
                         float syncScale = scaleX;
                         syncScale = EditorGUILayout.Slider("X / Y Scale", syncScale, -1.0f, 1.0f);
                         scaleX = syncScale;
@@ -321,7 +265,6 @@ namespace lilToon
                     }
                     else
                     {
-                        // Separate scale sliders
                         scaleX = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.x" : lilLanguageManager.GetLoc("sScaleX"), scaleX, -1.0f, 1.0f);
                         scaleY = EditorGUILayout.Slider(Event.current.alt ? decalTex[index].name + "_ST.y" : lilLanguageManager.GetLoc("sScaleY"), scaleY, -1.0f, 1.0f);
                     }
@@ -332,7 +275,6 @@ namespace lilToon
 
                         scaleX = 1.0f / scaleX;
                         scaleY = 1.0f / scaleY;
-                        // Convert Position to UV_ST offset: 0/0=bottom-left, 0.5/0.5=center, 1/1=top-right
                         posX = (-(posX - 0.5f) * scaleX) + 0.5f;
                         posY = (-(posY - 0.5f) * scaleY) + 0.5f;
 
@@ -340,12 +282,9 @@ namespace lilToon
                     }
                     
                     lilEditorGUI.LocalizedProperty(m_MaterialEditor, decalTexAngle[index]);
-
-                    // AudioLink controls with Foldout+Toggle header (Poiyomi-style)
                     if(decalUseAudioLink[index] != null)
                     {
                         EditorGUILayout.Space(2);
-                        // Modified function used here
                         isShowDecalAudioLink[index] = FoldoutWithToggle("AudioLink", isShowDecalAudioLink[index], decalUseAudioLink[index]);
                         
                         if(isShowDecalAudioLink[index])
@@ -365,12 +304,8 @@ namespace lilToon
                             }
                             if(decalAudioLinkScale[index] != null)
                             {
-                                // Split Vector4 into two Vector2 fields (minX/maxX, minY/maxY)
                                 Vector4 scaleVec = decalAudioLinkScale[index].vectorValue;
-
                                 EditorGUI.BeginChangeCheck();
-
-                                // X Scale (minX, maxX)
                                 var positionVec2X = EditorGUILayout.GetControlRect();
                                 float labelWidth = EditorGUIUtility.labelWidth;
                                 var labelRectX = new Rect(positionVec2X.x, positionVec2X.y, labelWidth, positionVec2X.height);
@@ -378,27 +313,33 @@ namespace lilToon
 
                                 var vecRectX = new Rect(positionVec2X.x + labelWidth, positionVec2X.y, positionVec2X.width - labelWidth, positionVec2X.height);
                                 Vector2 audioScaleX = new Vector2(scaleVec.x, scaleVec.z);
-                                audioScaleX = EditorGUI.Vector2Field(vecRectX, GUIContent.none, audioScaleX);
-
-                                // Y Scale (minY, maxY)
+                                int indentBufX = EditorGUI.indentLevel;
+                                EditorGUI.indentLevel = 0;
+                                GUIContent[] scaleXLabels = new GUIContent[] { new GUIContent("X Min"), new GUIContent("X Max") };
+                                float[] scaleXVals = new float[] { audioScaleX.x, audioScaleX.y };
+                                EditorGUI.MultiFloatField(vecRectX, GUIContent.none, scaleXLabels, scaleXVals);
+                                audioScaleX = new Vector2(scaleXVals[0], scaleXVals[1]);
+                                EditorGUI.indentLevel = indentBufX;
                                 var positionVec2Y = EditorGUILayout.GetControlRect();
                                 var labelRectY = new Rect(positionVec2Y.x, positionVec2Y.y, labelWidth, positionVec2Y.height);
                                 EditorGUI.PrefixLabel(labelRectY, new GUIContent(Event.current.alt ? decalAudioLinkScale[index].name + ".yw" : "Scale Y (min / max)"));
 
                                 var vecRectY = new Rect(positionVec2Y.x + labelWidth, positionVec2Y.y, positionVec2Y.width - labelWidth, positionVec2Y.height);
                                 Vector2 audioScaleY = new Vector2(scaleVec.y, scaleVec.w);
-                                audioScaleY = EditorGUI.Vector2Field(vecRectY, GUIContent.none, audioScaleY);
+                                int indentBufY = EditorGUI.indentLevel;
+                                EditorGUI.indentLevel = 0;
+                                GUIContent[] scaleYLabels = new GUIContent[] { new GUIContent("Y Min"), new GUIContent("Y Max") };
+                                float[] scaleYVals = new float[] { audioScaleY.x, audioScaleY.y };
+                                EditorGUI.MultiFloatField(vecRectY, GUIContent.none, scaleYLabels, scaleYVals);
+                                audioScaleY = new Vector2(scaleYVals[0], scaleYVals[1]);
+                                EditorGUI.indentLevel = indentBufY;
 
                                 if(EditorGUI.EndChangeCheck())
                                 {
                                     decalAudioLinkScale[index].vectorValue = new Vector4(audioScaleX.x, audioScaleY.x, audioScaleX.y, audioScaleY.y);
                                 }
                             }
-
                             DrawLine();
-
-
-                            // --- Side controls (Side Band + Side Monitor min/max) ---
                             if(decalAudioLinkSideBand[index] != null)
                             {
                                 int sideBand = (int)decalAudioLinkSideBand[index].floatValue;
@@ -410,8 +351,6 @@ namespace lilToon
                                     decalAudioLinkSideBand[index].floatValue = sideBand;
                                 }
                             }
-
-                            // Side Mod Min/Max (L / R / D / U)
                             GUIContent[] sideSubLabels = new GUIContent[] { new GUIContent("L"), new GUIContent("R"), new GUIContent("D"), new GUIContent("U") };
                             Vector4 minVec = Vector4.zero;
                             Vector4 maxVec = Vector4.zero;
@@ -419,34 +358,33 @@ namespace lilToon
                             if(decalAudioLinkSideMonMax[index] != null) maxVec = decalAudioLinkSideMonMax[index].vectorValue;
 
                             EditorGUI.BeginChangeCheck();
-
-                            // Min row
                             var posMin = EditorGUILayout.GetControlRect();
                             var labRectMin = new Rect(posMin.x, posMin.y, EditorGUIUtility.labelWidth, posMin.height);
                             EditorGUI.PrefixLabel(labRectMin, new GUIContent("Side Mod Min"));
                             var vRectMin = new Rect(posMin.x + EditorGUIUtility.labelWidth, posMin.y, posMin.width - EditorGUIUtility.labelWidth, posMin.height);
-                            float[] minVals = new float[] { minVec.x, minVec.y, minVec.z, minVec.w };
+                            float[] minVals = new float[] { minVec.y, minVec.x, minVec.w, minVec.z };
+                            int indentBufMin = EditorGUI.indentLevel;
+                            EditorGUI.indentLevel = 0;
                             EditorGUI.MultiFloatField(vRectMin, GUIContent.none, sideSubLabels, minVals);
-
-                            // Max row
+                            EditorGUI.indentLevel = indentBufMin;
                             var posMax = EditorGUILayout.GetControlRect();
                             var labRectMax = new Rect(posMax.x, posMax.y, EditorGUIUtility.labelWidth, posMax.height);
                             EditorGUI.PrefixLabel(labRectMax, new GUIContent("Side Mod Max"));
                             var vRectMax = new Rect(posMax.x + EditorGUIUtility.labelWidth, posMax.y, posMax.width - EditorGUIUtility.labelWidth, posMax.height);
-                            float[] maxVals = new float[] { maxVec.x, maxVec.y, maxVec.z, maxVec.w };
+                            float[] maxVals = new float[] { maxVec.y, maxVec.x, maxVec.w, maxVec.z };
+                            int indentBufMax = EditorGUI.indentLevel;
+                            EditorGUI.indentLevel = 0;
                             EditorGUI.MultiFloatField(vRectMax, GUIContent.none, sideSubLabels, maxVals);
+                            EditorGUI.indentLevel = indentBufMax;
 
                             if(EditorGUI.EndChangeCheck())
                             {
                                 if(decalAudioLinkSideMonMin[index] != null)
-                                    decalAudioLinkSideMonMin[index].vectorValue = new Vector4(minVals[0], minVals[1], minVals[2], minVals[3]);
+                                    decalAudioLinkSideMonMin[index].vectorValue = new Vector4(minVals[1], minVals[0], minVals[3], minVals[2]);
                                 if(decalAudioLinkSideMonMax[index] != null)
-                                    decalAudioLinkSideMonMax[index].vectorValue = new Vector4(maxVals[0], maxVals[1], maxVals[2], maxVals[3]);
+                                    decalAudioLinkSideMonMax[index].vectorValue = new Vector4(maxVals[1], maxVals[0], maxVals[3], maxVals[2]);
                             }
-
                             DrawLine();
-
-                            // Rotation controls (Rotation Band + Rotation min/max)
                             if(decalAudioLinkRotationBand[index] != null)
                             {
                                 int rotationBand = (int)decalAudioLinkRotationBand[index].floatValue;
@@ -460,7 +398,7 @@ namespace lilToon
                             }
                             if(decalAudioLinkRotation[index] != null)
                             {
-                                Vector4 rotVec = decalAudioLinkRotation[index].vectorValue; // x=min, y=max
+                                Vector4 rotVec = decalAudioLinkRotation[index].vectorValue;
                                 EditorGUI.BeginChangeCheck();
 
                                 var posRot = EditorGUILayout.GetControlRect();
@@ -469,18 +407,19 @@ namespace lilToon
                                 EditorGUI.PrefixLabel(labRectRot, new GUIContent(Event.current.alt ? decalAudioLinkRotation[index].name + ".xy" : "Rotation (min / max)"));
 
                                 var vRectRot = new Rect(posRot.x + lwRot, posRot.y, posRot.width - lwRot, posRot.height);
-                                Vector2 rotVals = new Vector2(rotVec.x, rotVec.y);
-                                rotVals = EditorGUI.Vector2Field(vRectRot, GUIContent.none, rotVals);
+                                GUIContent[] rotLabels = new GUIContent[] { new GUIContent("R Min"), new GUIContent("R Max") };
+                                float[] rotValsArr = new float[] { rotVec.x, rotVec.y };
+                                int indentBufRot = EditorGUI.indentLevel;
+                                EditorGUI.indentLevel = 0;
+                                EditorGUI.MultiFloatField(vRectRot, GUIContent.none, rotLabels, rotValsArr);
+                                EditorGUI.indentLevel = indentBufRot;
 
                                 if(EditorGUI.EndChangeCheck())
                                 {
-                                    decalAudioLinkRotation[index].vectorValue = new Vector4(rotVals.x, rotVals.y, rotVec.z, rotVec.w);
+                                    decalAudioLinkRotation[index].vectorValue = new Vector4(rotValsArr[0], rotValsArr[1], rotVec.z, rotVec.w);
                                 }
                             }
-
                             DrawLine();
-
-                            // Chrono Rotation controls (band / motion type / speed)
                             if(decalAudioLinkChronoRotationBand[index] != null)
                             {
                                 int chronoRotationBand = (int)decalAudioLinkChronoRotationBand[index].floatValue;
@@ -525,16 +464,12 @@ namespace lilToon
                 EditorGUI.indentLevel--;
                 
                 DrawLine();
-                
                 EditorGUI.indentLevel++;
-                // Animation foldout with toggle
                 isShowDecalAnimation[index] = FoldoutWithToggle("Animation", isShowDecalAnimation[index], decalUseAnimation[index], 0f);
                 
                 if(isShowDecalAnimation[index])
                 {
                     EditorGUILayout.BeginVertical(boxInner);
-                    
-                    // Animation parameters
                     Vector4 animVec = decalAnimation[index].vectorValue;
                     int loopX = (int)animVec.x;
                     int loopY = (int)animVec.y;
@@ -542,41 +477,29 @@ namespace lilToon
                     float speed = animVec.w;
                     
                     EditorGUI.BeginChangeCheck();
-                    
-                    // X/Y frames in horizontal layout (like Scroll)
                     var positionVec2 = EditorGUILayout.GetControlRect();
                     float labelWidth = EditorGUIUtility.labelWidth;
                     var labelRect = new Rect(positionVec2.x, positionVec2.y, labelWidth, positionVec2.height);
                     EditorGUI.PrefixLabel(labelRect, new GUIContent(Event.current.alt ? decalAnimation[index].name + ".xy" : "X / Y Frames"));
-                        
-                        int indentBuf = EditorGUI.indentLevel;
-                        EditorGUI.indentLevel = 0;
-                        
-                        var vecRect = new Rect(positionVec2.x + labelWidth, positionVec2.y, positionVec2.width - labelWidth, positionVec2.height);
-                        Vector2 framesVec = new Vector2(loopX, loopY);
-                        framesVec = EditorGUI.Vector2Field(vecRect, GUIContent.none, framesVec);
-                        loopX = (int)framesVec.x;
-                        loopY = (int)framesVec.y;
-                        
-                        EditorGUI.indentLevel = indentBuf;
-                        
-                        frames = EditorGUI.IntField(EditorGUILayout.GetControlRect(), Event.current.alt ? decalAnimation[index].name + ".z" : "Total Frames", frames);
-                        speed = EditorGUI.FloatField(EditorGUILayout.GetControlRect(), Event.current.alt ? decalAnimation[index].name + ".w" : "FPS", speed);
-                        
-                        if(EditorGUI.EndChangeCheck())
-                        {
-                            decalAnimation[index].vectorValue = new Vector4(loopX, loopY, frames, speed);
-                        }
-                        
-                        EditorGUILayout.EndVertical();
-                        DrawLine();
-                        
+                    int indentBuf = EditorGUI.indentLevel;
+                    EditorGUI.indentLevel = 0;
+                    var vecRect = new Rect(positionVec2.x + labelWidth, positionVec2.y, positionVec2.width - labelWidth, positionVec2.height);
+                    Vector2 framesVec = new Vector2(loopX, loopY);
+                    framesVec = EditorGUI.Vector2Field(vecRect, GUIContent.none, framesVec);
+                    loopX = (int)framesVec.x;
+                    loopY = (int)framesVec.y;
+                    EditorGUI.indentLevel = indentBuf;
+                    frames = EditorGUI.IntField(EditorGUILayout.GetControlRect(), Event.current.alt ? decalAnimation[index].name + ".z" : "Total Frames", frames);
+                    speed = EditorGUI.FloatField(EditorGUILayout.GetControlRect(), Event.current.alt ? decalAnimation[index].name + ".w" : "FPS", speed);
+                    if(EditorGUI.EndChangeCheck())
+                    {
+                        decalAnimation[index].vectorValue = new Vector4(loopX, loopY, frames, speed);
                     }
+                    EditorGUILayout.EndVertical();
+                    DrawLine();
+                }
 
                     DrawLine();
-
-                    
-                    
                     EditorGUI.indentLevel--;
 
                 EditorGUILayout.EndVertical();
