@@ -103,7 +103,27 @@
     float4 _Decal7TexDecalAnimation; \
     float4 _Decal8TexDecalAnimation; \
     float4 _Decal9TexDecalAnimation; \
-    float4 _Decal10TexDecalAnimation;
+    float4 _Decal10TexDecalAnimation; \
+    float _AudioLinkDecal1ScaleBand; \
+    float4 _AudioLinkDecal1Scale; \
+    float _AudioLinkDecal2ScaleBand; \
+    float4 _AudioLinkDecal2Scale; \
+    float _AudioLinkDecal3ScaleBand; \
+    float4 _AudioLinkDecal3Scale; \
+    float _AudioLinkDecal4ScaleBand; \
+    float4 _AudioLinkDecal4Scale; \
+    float _AudioLinkDecal5ScaleBand; \
+    float4 _AudioLinkDecal5Scale; \
+    float _AudioLinkDecal6ScaleBand; \
+    float4 _AudioLinkDecal6Scale; \
+    float _AudioLinkDecal7ScaleBand; \
+    float4 _AudioLinkDecal7Scale; \
+    float _AudioLinkDecal8ScaleBand; \
+    float4 _AudioLinkDecal8Scale; \
+    float _AudioLinkDecal9ScaleBand; \
+    float4 _AudioLinkDecal9Scale; \
+    float _AudioLinkDecal10ScaleBand; \
+    float4 _AudioLinkDecal10Scale;
 
 // Custom textures
 #define LIL_CUSTOM_TEXTURES \
@@ -117,6 +137,12 @@
     TEXTURE2D(_Decal8Tex); \
     TEXTURE2D(_Decal9Tex); \
     TEXTURE2D(_Decal10Tex); \
+
+// AudioLink global texture (lilToon compatible)
+#if defined(LIL_FEATURE_AUDIOLINK) && !defined(AUDIOLINK_CGINC_INCLUDED)
+    TEXTURE2D_FLOAT(_AudioTexture);
+    float4 _AudioTexture_TexelSize;
+#endif
 
 // Add vertex shader input
 

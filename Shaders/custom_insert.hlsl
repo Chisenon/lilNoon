@@ -1,8 +1,3 @@
-//----------------------------------------------------------------------------------------------------------------------
-// Decal Processing
-//----------------------------------------------------------------------------------------------------------------------
-
-// Helper function to rotate 2D vector
 float2 lilMoreDecalRotate2D(float2 v, float angle)
 {
     float s, c;
@@ -10,20 +5,15 @@ float2 lilMoreDecalRotate2D(float2 v, float angle)
     return float2(v.x * c - v.y * s, v.x * s + v.y * c);
 }
 
-// Inverse affine transform: applies translate, rotate, scale in reverse order
-// This allows rotation center to follow position while preserving aspect ratio
 float2 lilMoreDecalInvAffineTransform(float2 uv, float2 translate, float angle, float2 scale)
 {
-    // Clamp scale to avoid division by zero, but preserve sign for flipping
     scale.x = abs(scale.x) < 0.001 ? sign(scale.x) * 0.001 : scale.x;
     scale.y = abs(scale.y) < 0.001 ? sign(scale.y) * 0.001 : scale.y;
     return lilMoreDecalRotate2D(uv - 0.5 - translate, angle) / scale + 0.5;
 }
 
-// Helper function to blend colors based on blend mode
 float3 lilMoreDecalBlendColor(float3 baseColor, float3 decalColor, float alpha, uint blendMode)
 {
-    // 0:Normal 1:Add 2:Screen 3:Multiply
     if(blendMode == 0) return lerp(baseColor, decalColor, alpha);
     if(blendMode == 1) return baseColor + decalColor * alpha;
     if(blendMode == 2) return lerp(baseColor, 1.0 - (1.0 - baseColor) * (1.0 - decalColor), alpha);
@@ -31,8 +21,6 @@ float3 lilMoreDecalBlendColor(float3 baseColor, float3 decalColor, float alpha, 
     return lerp(baseColor, decalColor, alpha);
 }
 
-// Custom decal UV calculation using inverse affine transform
-// This approach allows rotation center to follow Position X/Y while preserving aspect ratio
 float2 lilMoreDecalCalcUV(
     float2 uv,
     float4 uv_ST,
@@ -42,27 +30,35 @@ float2 lilMoreDecalCalcUV(
 {
     float2 outUV = uv;
 
-    // Copy (same as lilCalcDecalUV)
     if(shouldCopy) outUV.x = abs(outUV.x - 0.5) + 0.5;
 
-    // Convert uv_ST to translate and scale
-    // uv_ST.xy = scale (inverted: 1/displayScale)
-    // uv_ST.zw = offset (calculated: -posX*scaleX+0.5)
-    // We need to extract: translate (position) and scale (1/uv_ST.xy)
-    // Preserve sign for flipping when scale is negative (0 to -1 range)
     float2 scale = float2(1.0, 1.0) / uv_ST.xy;
     float2 translate = (float2(0.5, 0.5) - uv_ST.zw) / uv_ST.xy;
     
-    // Apply inverse affine transform: translate → rotate → scale
     outUV = lilMoreDecalInvAffineTransform(outUV, translate, angle, scale);
 
-    // Flip (same as lilCalcDecalUV)
     if(shouldFlipCopy && uv.x < 0.5) outUV.x = 1.0 - outUV.x;
 
     return outUV;
 }
 
-// Apply decal to color
+// Sample AudioLink real-time audio data (band: 0=Bass, 1=LowMid, 2=HighMid, 3=Treble)
+float lilMoreDecalSampleAudio(int band)
+{
+    #if defined(LIL_FEATURE_AUDIOLINK)
+        if(!lilCheckAudioLink()) return 0.0;
+
+        float bandY = (band * 0.25) + 0.125;
+        bandY *= 0.0625;
+        float2 audioUV = float2(0.0, bandY);  // X=0.0 for current frame data
+
+        float4 audioTex = LIL_SAMPLE_2D(_AudioTexture, lil_sampler_linear_clamp, audioUV);
+        return saturate(audioTex.r);
+    #else
+        return 0.0;
+    #endif
+}
+
 void lilApplyDecal(
     inout lilFragData fd,
     float2 uv,
@@ -75,37 +71,55 @@ void lilApplyDecal(
     bool decalTexIsMSDF,
     uint decalBlendMode,
     bool decalUseAnimation,
-    float4 decalAnimation
+    float4 decalAnimation,
+    float decalAudioLinkScaleBand,
+    float4 decalAudioLinkScale
     LIL_SAMP_IN_FUNC(samp))
 {
-    // Calculate UV with custom rotation (around texture center)
+    float4 localTexST = decalTex_ST;
+    #if defined(LIL_FEATURE_AUDIOLINK)
+        // Modulate decal scale by AudioLink (preserves texture center during scale changes)
+        if(any(decalAudioLinkScale != 0.0))
+        {
+            int band = (int)decalAudioLinkScaleBand;
+            float audioVal = lilMoreDecalSampleAudio(band);
+
+            float mulX = lerp(decalAudioLinkScale.x, decalAudioLinkScale.z, audioVal);
+            float mulY = lerp(decalAudioLinkScale.y, decalAudioLinkScale.w, audioVal);
+
+            if(!(mulX == 0.0 && mulY == 0.0))
+            {
+                mulX = (mulX <= 1e-5) ? 1.0 : mulX;
+                mulY = (mulY <= 1e-5) ? 1.0 : mulY;
+                
+                float2 scaleRatio = float2(1.0 / mulX, 1.0 / mulY);
+                localTexST.zw = localTexST.zw * scaleRatio + float2(0.5, 0.5) * (1.0 - scaleRatio);  // Adjust offset to keep center fixed
+                localTexST.xy = localTexST.xy / float2(mulX, mulY);
+            }
+        }
+    #endif
+
     float2 decalUV = lilMoreDecalCalcUV(
         uv,
-        decalTex_ST,
+        localTexST,
         decalTexAngle,
         decalShouldCopy,
         decalShouldFlipCopy);
     
-    // Apply decal masking BEFORE atlas animation (always enabled)
-    // Check if UV is in 0-1 range (with small tolerance based on normal view)
     float mask = saturate(0.5 - abs(decalUV.x - 0.5));
     mask *= saturate(0.5 - abs(decalUV.y - 0.5));
     mask = saturate(mask / clamp(fwidth(mask), 0.0001, saturate(fd.nv - 0.05)));
     
-    // Apply atlas animation (sprite sheet) only if enabled
     if(decalUseAnimation)
     {
         float4 decalSubParam = float4(1.0, 1.0, 0.0, 1.0);
         decalUV = lilCalcAtlasAnimation(decalUV, decalAnimation, decalSubParam);
     }
     
-    // Sample texture
     float4 decalSample = LIL_SAMPLE_2D(decalTex, samp, decalUV);
     
-    // Apply MSDF if enabled
     if(decalTexIsMSDF) decalSample = float4(1.0, 1.0, 1.0, lilMSDF(decalSample.rgb));
     
-    // Apply mask to alpha
     decalSample.a *= mask;
     
     float3 decalCol = decalSample.rgb * decalColor.rgb;
@@ -117,7 +131,6 @@ void lilApplyDecal(
     }
 }
 
-// Insert decal processing after Main3rd (similar to DecalHeartRate)
 #if !defined(BEFORE_MAIN3RD)
     #define BEFORE_MAIN3RD \
         if(_DecalCount >= 1) \
@@ -138,7 +151,9 @@ void lilApplyDecal(
                 _Decal1TexIsMSDF, \
                 _Decal1BlendMode, \
                 _Decal1UseAnimation, \
-                _Decal1TexDecalAnimation \
+                _Decal1TexDecalAnimation, \
+                _AudioLinkDecal1ScaleBand, \
+                _AudioLinkDecal1Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 2) \
@@ -159,7 +174,9 @@ void lilApplyDecal(
                 _Decal2TexIsMSDF, \
                 _Decal2BlendMode, \
                 _Decal2UseAnimation, \
-                _Decal2TexDecalAnimation \
+                _Decal2TexDecalAnimation, \
+                _AudioLinkDecal2ScaleBand, \
+                _AudioLinkDecal2Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 3) \
@@ -180,7 +197,9 @@ void lilApplyDecal(
                 _Decal3TexIsMSDF, \
                 _Decal3BlendMode, \
                 _Decal3UseAnimation, \
-                _Decal3TexDecalAnimation \
+                _Decal3TexDecalAnimation, \
+                _AudioLinkDecal3ScaleBand, \
+                _AudioLinkDecal3Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 4) \
@@ -201,7 +220,9 @@ void lilApplyDecal(
                 _Decal4TexIsMSDF, \
                 _Decal4BlendMode, \
                 _Decal4UseAnimation, \
-                _Decal4TexDecalAnimation \
+                _Decal4TexDecalAnimation, \
+                _AudioLinkDecal4ScaleBand, \
+                _AudioLinkDecal4Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 5) \
@@ -222,7 +243,9 @@ void lilApplyDecal(
                 _Decal5TexIsMSDF, \
                 _Decal5BlendMode, \
                 _Decal5UseAnimation, \
-                _Decal5TexDecalAnimation \
+                _Decal5TexDecalAnimation, \
+                _AudioLinkDecal5ScaleBand, \
+                _AudioLinkDecal5Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 6) \
@@ -243,7 +266,9 @@ void lilApplyDecal(
                 _Decal6TexIsMSDF, \
                 _Decal6BlendMode, \
                 _Decal6UseAnimation, \
-                _Decal6TexDecalAnimation \
+                _Decal6TexDecalAnimation, \
+                _AudioLinkDecal6ScaleBand, \
+                _AudioLinkDecal6Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 7) \
@@ -264,7 +289,9 @@ void lilApplyDecal(
                 _Decal7TexIsMSDF, \
                 _Decal7BlendMode, \
                 _Decal7UseAnimation, \
-                _Decal7TexDecalAnimation \
+                _Decal7TexDecalAnimation, \
+                _AudioLinkDecal7ScaleBand, \
+                _AudioLinkDecal7Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 8) \
@@ -285,7 +312,9 @@ void lilApplyDecal(
                 _Decal8TexIsMSDF, \
                 _Decal8BlendMode, \
                 _Decal8UseAnimation, \
-                _Decal8TexDecalAnimation \
+                _Decal8TexDecalAnimation, \
+                _AudioLinkDecal8ScaleBand, \
+                _AudioLinkDecal8Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 9) \
@@ -306,7 +335,9 @@ void lilApplyDecal(
                 _Decal9TexIsMSDF, \
                 _Decal9BlendMode, \
                 _Decal9UseAnimation, \
-                _Decal9TexDecalAnimation \
+                _Decal9TexDecalAnimation, \
+                _AudioLinkDecal9ScaleBand, \
+                _AudioLinkDecal9Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 10) \
@@ -327,7 +358,9 @@ void lilApplyDecal(
                 _Decal10TexIsMSDF, \
                 _Decal10BlendMode, \
                 _Decal10UseAnimation, \
-                _Decal10TexDecalAnimation \
+                _Decal10TexDecalAnimation, \
+                _AudioLinkDecal10ScaleBand, \
+                _AudioLinkDecal10Scale \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         }
 #endif
