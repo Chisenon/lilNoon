@@ -123,7 +123,37 @@
     float _AudioLinkDecal9ScaleBand; \
     float4 _AudioLinkDecal9Scale; \
     float _AudioLinkDecal10ScaleBand; \
-    float4 _AudioLinkDecal10Scale;
+    float4 _AudioLinkDecal10Scale; \
+    float _AudioLinkDecal1SideBand; \
+    float4 _AudioLinkDecal1SideMonMin; \
+    float4 _AudioLinkDecal1SideMonMax; \
+    float _AudioLinkDecal2SideBand; \
+    float4 _AudioLinkDecal2SideMonMin; \
+    float4 _AudioLinkDecal2SideMonMax; \
+    float _AudioLinkDecal3SideBand; \
+    float4 _AudioLinkDecal3SideMonMin; \
+    float4 _AudioLinkDecal3SideMonMax; \
+    float _AudioLinkDecal4SideBand; \
+    float4 _AudioLinkDecal4SideMonMin; \
+    float4 _AudioLinkDecal4SideMonMax; \
+    float _AudioLinkDecal5SideBand; \
+    float4 _AudioLinkDecal5SideMonMin; \
+    float4 _AudioLinkDecal5SideMonMax; \
+    float _AudioLinkDecal6SideBand; \
+    float4 _AudioLinkDecal6SideMonMin; \
+    float4 _AudioLinkDecal6SideMonMax; \
+    float _AudioLinkDecal7SideBand; \
+    float4 _AudioLinkDecal7SideMonMin; \
+    float4 _AudioLinkDecal7SideMonMax; \
+    float _AudioLinkDecal8SideBand; \
+    float4 _AudioLinkDecal8SideMonMin; \
+    float4 _AudioLinkDecal8SideMonMax; \
+    float _AudioLinkDecal9SideBand; \
+    float4 _AudioLinkDecal9SideMonMin; \
+    float4 _AudioLinkDecal9SideMonMax; \
+    float _AudioLinkDecal10SideBand; \
+    float4 _AudioLinkDecal10SideMonMin; \
+    float4 _AudioLinkDecal10SideMonMax;
 
 // Custom textures
 #define LIL_CUSTOM_TEXTURES \

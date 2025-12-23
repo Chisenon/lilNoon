@@ -73,7 +73,10 @@ void lilApplyDecal(
     bool decalUseAnimation,
     float4 decalAnimation,
     float decalAudioLinkScaleBand,
-    float4 decalAudioLinkScale
+    float4 decalAudioLinkScale,
+    float decalAudioLinkSideBand,
+    float4 decalAudioLinkSideMonMin,
+    float4 decalAudioLinkSideMonMax
     LIL_SAMP_IN_FUNC(samp))
 {
     float4 localTexST = decalTex_ST;
@@ -96,6 +99,24 @@ void lilApplyDecal(
                 localTexST.zw = localTexST.zw * scaleRatio + float2(0.5, 0.5) * (1.0 - scaleRatio);  // Adjust offset to keep center fixed
                 localTexST.xy = localTexST.xy / float2(mulX, mulY);
             }
+        }
+        
+        // Modulate decal position by AudioLink (L/R/D/U from center)
+        if(any(decalAudioLinkSideMonMin != 0.0) || any(decalAudioLinkSideMonMax != 0.0))
+        {
+            int band = (int)decalAudioLinkSideBand;
+            float audioVal = lilMoreDecalSampleAudio(band);
+            
+            float leftVal = lerp(decalAudioLinkSideMonMin.x, decalAudioLinkSideMonMax.x, audioVal);
+            float rightVal = lerp(decalAudioLinkSideMonMin.y, decalAudioLinkSideMonMax.y, audioVal);
+            float downVal = lerp(decalAudioLinkSideMonMin.z, decalAudioLinkSideMonMax.z, audioVal);
+            float upVal = lerp(decalAudioLinkSideMonMin.w, decalAudioLinkSideMonMax.w, audioVal);
+            
+            float offsetX = rightVal - leftVal;
+            float offsetY = upVal - downVal;
+            
+            localTexST.z += offsetX;
+            localTexST.w += offsetY;
         }
     #endif
 
@@ -153,7 +174,10 @@ void lilApplyDecal(
                 _Decal1UseAnimation, \
                 _Decal1TexDecalAnimation, \
                 _AudioLinkDecal1ScaleBand, \
-                _AudioLinkDecal1Scale \
+                _AudioLinkDecal1Scale, \
+                _AudioLinkDecal1SideBand, \
+                _AudioLinkDecal1SideMonMin, \
+                _AudioLinkDecal1SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 2) \
@@ -176,7 +200,10 @@ void lilApplyDecal(
                 _Decal2UseAnimation, \
                 _Decal2TexDecalAnimation, \
                 _AudioLinkDecal2ScaleBand, \
-                _AudioLinkDecal2Scale \
+                _AudioLinkDecal2Scale, \
+                _AudioLinkDecal2SideBand, \
+                _AudioLinkDecal2SideMonMin, \
+                _AudioLinkDecal2SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 3) \
@@ -199,7 +226,10 @@ void lilApplyDecal(
                 _Decal3UseAnimation, \
                 _Decal3TexDecalAnimation, \
                 _AudioLinkDecal3ScaleBand, \
-                _AudioLinkDecal3Scale \
+                _AudioLinkDecal3Scale, \
+                _AudioLinkDecal3SideBand, \
+                _AudioLinkDecal3SideMonMin, \
+                _AudioLinkDecal3SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 4) \
@@ -222,7 +252,10 @@ void lilApplyDecal(
                 _Decal4UseAnimation, \
                 _Decal4TexDecalAnimation, \
                 _AudioLinkDecal4ScaleBand, \
-                _AudioLinkDecal4Scale \
+                _AudioLinkDecal4Scale, \
+                _AudioLinkDecal4SideBand, \
+                _AudioLinkDecal4SideMonMin, \
+                _AudioLinkDecal4SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 5) \
@@ -245,7 +278,10 @@ void lilApplyDecal(
                 _Decal5UseAnimation, \
                 _Decal5TexDecalAnimation, \
                 _AudioLinkDecal5ScaleBand, \
-                _AudioLinkDecal5Scale \
+                _AudioLinkDecal5Scale, \
+                _AudioLinkDecal5SideBand, \
+                _AudioLinkDecal5SideMonMin, \
+                _AudioLinkDecal5SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 6) \
@@ -268,7 +304,10 @@ void lilApplyDecal(
                 _Decal6UseAnimation, \
                 _Decal6TexDecalAnimation, \
                 _AudioLinkDecal6ScaleBand, \
-                _AudioLinkDecal6Scale \
+                _AudioLinkDecal6Scale, \
+                _AudioLinkDecal6SideBand, \
+                _AudioLinkDecal6SideMonMin, \
+                _AudioLinkDecal6SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 7) \
@@ -291,7 +330,10 @@ void lilApplyDecal(
                 _Decal7UseAnimation, \
                 _Decal7TexDecalAnimation, \
                 _AudioLinkDecal7ScaleBand, \
-                _AudioLinkDecal7Scale \
+                _AudioLinkDecal7Scale, \
+                _AudioLinkDecal7SideBand, \
+                _AudioLinkDecal7SideMonMin, \
+                _AudioLinkDecal7SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 8) \
@@ -314,7 +356,10 @@ void lilApplyDecal(
                 _Decal8UseAnimation, \
                 _Decal8TexDecalAnimation, \
                 _AudioLinkDecal8ScaleBand, \
-                _AudioLinkDecal8Scale \
+                _AudioLinkDecal8Scale, \
+                _AudioLinkDecal8SideBand, \
+                _AudioLinkDecal8SideMonMin, \
+                _AudioLinkDecal8SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 9) \
@@ -337,7 +382,10 @@ void lilApplyDecal(
                 _Decal9UseAnimation, \
                 _Decal9TexDecalAnimation, \
                 _AudioLinkDecal9ScaleBand, \
-                _AudioLinkDecal9Scale \
+                _AudioLinkDecal9Scale, \
+                _AudioLinkDecal9SideBand, \
+                _AudioLinkDecal9SideMonMin, \
+                _AudioLinkDecal9SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 10) \
@@ -360,7 +408,10 @@ void lilApplyDecal(
                 _Decal10UseAnimation, \
                 _Decal10TexDecalAnimation, \
                 _AudioLinkDecal10ScaleBand, \
-                _AudioLinkDecal10Scale \
+                _AudioLinkDecal10Scale, \
+                _AudioLinkDecal10SideBand, \
+                _AudioLinkDecal10SideMonMin, \
+                _AudioLinkDecal10SideMonMax \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         }
 #endif
