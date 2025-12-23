@@ -153,7 +153,27 @@
     float4 _AudioLinkDecal9SideMonMax; \
     float _AudioLinkDecal10SideBand; \
     float4 _AudioLinkDecal10SideMonMin; \
-    float4 _AudioLinkDecal10SideMonMax;
+    float4 _AudioLinkDecal10SideMonMax; \
+    float _AudioLinkDecal1RotationBand; \
+    float2 _AudioLinkDecal1Rotation; \
+    float _AudioLinkDecal2RotationBand; \
+    float2 _AudioLinkDecal2Rotation; \
+    float _AudioLinkDecal3RotationBand; \
+    float2 _AudioLinkDecal3Rotation; \
+    float _AudioLinkDecal4RotationBand; \
+    float2 _AudioLinkDecal4Rotation; \
+    float _AudioLinkDecal5RotationBand; \
+    float2 _AudioLinkDecal5Rotation; \
+    float _AudioLinkDecal6RotationBand; \
+    float2 _AudioLinkDecal6Rotation; \
+    float _AudioLinkDecal7RotationBand; \
+    float2 _AudioLinkDecal7Rotation; \
+    float _AudioLinkDecal8RotationBand; \
+    float2 _AudioLinkDecal8Rotation; \
+    float _AudioLinkDecal9RotationBand; \
+    float2 _AudioLinkDecal9Rotation; \
+    float _AudioLinkDecal10RotationBand; \
+    float2 _AudioLinkDecal10Rotation;
 
 // Custom textures
 #define LIL_CUSTOM_TEXTURES \

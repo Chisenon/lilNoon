@@ -76,7 +76,9 @@ void lilApplyDecal(
     float4 decalAudioLinkScale,
     float decalAudioLinkSideBand,
     float4 decalAudioLinkSideMonMin,
-    float4 decalAudioLinkSideMonMax
+    float4 decalAudioLinkSideMonMax,
+    float decalAudioLinkRotationBand,
+    float2 decalAudioLinkRotation
     LIL_SAMP_IN_FUNC(samp))
 {
     float4 localTexST = decalTex_ST;
@@ -117,6 +119,18 @@ void lilApplyDecal(
             
             localTexST.z += offsetX;
             localTexST.w += offsetY;
+        }
+        
+        // Modulate decal rotation by AudioLink (input in degrees; convert to radians)
+        if(any(decalAudioLinkRotation != 0.0))
+        {
+            int band = (int)decalAudioLinkRotationBand;
+            float audioVal = lilMoreDecalSampleAudio(band);
+
+            float rotDeg = lerp(decalAudioLinkRotation.x, decalAudioLinkRotation.y, audioVal);
+            const float DEG2RAD = 0.017453292519943295;
+            float rotAngle = rotDeg * DEG2RAD;
+            decalTexAngle += rotAngle;
         }
     #endif
 
@@ -177,7 +191,9 @@ void lilApplyDecal(
                 _AudioLinkDecal1Scale, \
                 _AudioLinkDecal1SideBand, \
                 _AudioLinkDecal1SideMonMin, \
-                _AudioLinkDecal1SideMonMax \
+                _AudioLinkDecal1SideMonMax, \
+                _AudioLinkDecal1RotationBand, \
+                _AudioLinkDecal1Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 2) \
@@ -203,7 +219,9 @@ void lilApplyDecal(
                 _AudioLinkDecal2Scale, \
                 _AudioLinkDecal2SideBand, \
                 _AudioLinkDecal2SideMonMin, \
-                _AudioLinkDecal2SideMonMax \
+                _AudioLinkDecal2SideMonMax, \
+                _AudioLinkDecal2RotationBand, \
+                _AudioLinkDecal2Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 3) \
@@ -229,7 +247,9 @@ void lilApplyDecal(
                 _AudioLinkDecal3Scale, \
                 _AudioLinkDecal3SideBand, \
                 _AudioLinkDecal3SideMonMin, \
-                _AudioLinkDecal3SideMonMax \
+                _AudioLinkDecal3SideMonMax, \
+                _AudioLinkDecal3RotationBand, \
+                _AudioLinkDecal3Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 4) \
@@ -255,7 +275,9 @@ void lilApplyDecal(
                 _AudioLinkDecal4Scale, \
                 _AudioLinkDecal4SideBand, \
                 _AudioLinkDecal4SideMonMin, \
-                _AudioLinkDecal4SideMonMax \
+                _AudioLinkDecal4SideMonMax, \
+                _AudioLinkDecal4RotationBand, \
+                _AudioLinkDecal4Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 5) \
@@ -281,7 +303,9 @@ void lilApplyDecal(
                 _AudioLinkDecal5Scale, \
                 _AudioLinkDecal5SideBand, \
                 _AudioLinkDecal5SideMonMin, \
-                _AudioLinkDecal5SideMonMax \
+                _AudioLinkDecal5SideMonMax, \
+                _AudioLinkDecal5RotationBand, \
+                _AudioLinkDecal5Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 6) \
@@ -307,7 +331,9 @@ void lilApplyDecal(
                 _AudioLinkDecal6Scale, \
                 _AudioLinkDecal6SideBand, \
                 _AudioLinkDecal6SideMonMin, \
-                _AudioLinkDecal6SideMonMax \
+                _AudioLinkDecal6SideMonMax, \
+                _AudioLinkDecal6RotationBand, \
+                _AudioLinkDecal6Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 7) \
@@ -333,7 +359,9 @@ void lilApplyDecal(
                 _AudioLinkDecal7Scale, \
                 _AudioLinkDecal7SideBand, \
                 _AudioLinkDecal7SideMonMin, \
-                _AudioLinkDecal7SideMonMax \
+                _AudioLinkDecal7SideMonMax, \
+                _AudioLinkDecal7RotationBand, \
+                _AudioLinkDecal7Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 8) \
@@ -359,7 +387,9 @@ void lilApplyDecal(
                 _AudioLinkDecal8Scale, \
                 _AudioLinkDecal8SideBand, \
                 _AudioLinkDecal8SideMonMin, \
-                _AudioLinkDecal8SideMonMax \
+                _AudioLinkDecal8SideMonMax, \
+                _AudioLinkDecal8RotationBand, \
+                _AudioLinkDecal8Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 9) \
@@ -385,7 +415,9 @@ void lilApplyDecal(
                 _AudioLinkDecal9Scale, \
                 _AudioLinkDecal9SideBand, \
                 _AudioLinkDecal9SideMonMin, \
-                _AudioLinkDecal9SideMonMax \
+                _AudioLinkDecal9SideMonMax, \
+                _AudioLinkDecal9RotationBand, \
+                _AudioLinkDecal9Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 10) \
@@ -411,7 +443,9 @@ void lilApplyDecal(
                 _AudioLinkDecal10Scale, \
                 _AudioLinkDecal10SideBand, \
                 _AudioLinkDecal10SideMonMin, \
-                _AudioLinkDecal10SideMonMax \
+                _AudioLinkDecal10SideMonMax, \
+                _AudioLinkDecal10RotationBand, \
+                _AudioLinkDecal10Rotation \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         }
 #endif
