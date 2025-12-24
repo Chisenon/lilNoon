@@ -42,16 +42,13 @@ float2 lilMoreDecalCalcUV(
     return outUV;
 }
 
-// Sample AudioLink real-time audio data (band: 0=Bass, 1=LowMid, 2=HighMid, 3=Treble)
 float lilMoreDecalSampleAudio(int band)
 {
     #if defined(LIL_FEATURE_AUDIOLINK)
         if(!lilCheckAudioLink()) return 0.0;
-
         float bandY = (band * 0.25) + 0.125;
         bandY *= 0.0625;
-        float2 audioUV = float2(0.0, bandY);  // X=0.0 for current frame data
-
+        float2 audioUV = float2(0.0, bandY);
         float4 audioTex = LIL_SAMPLE_2D(_AudioTexture, lil_sampler_linear_clamp, audioUV);
         return saturate(audioTex.r);
     #else
@@ -59,15 +56,11 @@ float lilMoreDecalSampleAudio(int band)
     #endif
 }
 
-// Decode AudioLink packed uint stored in _AudioTexture at given pixel coords
 uint lilMoreDecalAudioLinkDecodeUInt(int px, int py)
 {
     #if defined(LIL_FEATURE_AUDIOLINK)
-        // sample texel center
         float2 uv = (float2(px, py) + 0.5) * _AudioTexture_TexelSize.xy;
-        // use point sampling to get raw cell
         float4 s = LIL_SAMPLE_2D(_AudioTexture, lil_sampler_linear_clamp, uv);
-        // AudioLink packs ~10 bits per channel (0..1023). Reconstruct uint as Poiyomi does.
         uint r = (uint)floor(s.r * 1023.0 + 0.5);
         uint g = (uint)floor(s.g * 1023.0 + 0.5);
         uint b = (uint)floor(s.b * 1023.0 + 0.5);
@@ -78,18 +71,15 @@ uint lilMoreDecalAudioLinkDecodeUInt(int px, int py)
     #endif
 }
 
-// Read chronotensity and convert to a radian value in range ~[0;2PI]
 float lilMoreDecalSampleChronoRad(int offsetX, int band)
 {
     #if defined(LIL_FEATURE_AUDIOLINK)
         if(!lilCheckAudioLink()) return 0.0;
-        // ALPASS_CHRONOTENSITY base coords (AudioLink spec): uint2(16,28)
-        const int baseX = 16;
+        const int baseX = 16; // ALPASS_CHRONOTENSITY
         const int baseY = 28;
         int px = baseX + clamp(offsetX, 0, 7);
         int py = baseY + clamp(band, 0, 3);
         uint u = lilMoreDecalAudioLinkDecodeUInt(px, py);
-        // Return AudioLink chrono raw time value (Poiyomi: decode / 100000.0)
         return (float(u) / 100000.0);
     #else
         return 0.0;
@@ -123,50 +113,40 @@ void lilApplyDecal(
 {
     float4 localTexST = decalTex_ST;
     #if defined(LIL_FEATURE_AUDIOLINK)
-        // Modulate decal scale by AudioLink (preserves texture center during scale changes)
         if(any(decalAudioLinkScale != 0.0))
         {
             int band = (int)decalAudioLinkScaleBand;
             float audioVal = lilMoreDecalSampleAudio(band);
-
             float mulX = lerp(decalAudioLinkScale.x, decalAudioLinkScale.z, audioVal);
             float mulY = lerp(decalAudioLinkScale.y, decalAudioLinkScale.w, audioVal);
-
             if(!(mulX == 0.0 && mulY == 0.0))
             {
                 mulX = (mulX <= 1e-5) ? 1.0 : mulX;
                 mulY = (mulY <= 1e-5) ? 1.0 : mulY;
-                
                 float2 scaleRatio = float2(1.0 / mulX, 1.0 / mulY);
-                localTexST.zw = localTexST.zw * scaleRatio + float2(0.5, 0.5) * (1.0 - scaleRatio);  // Adjust offset to keep center fixed
+                localTexST.zw = localTexST.zw * scaleRatio + float2(0.5, 0.5) * (1.0 - scaleRatio);
                 localTexST.xy = localTexST.xy / float2(mulX, mulY);
             }
         }
         
-        // Modulate decal position by AudioLink (L/R/D/U from center)
         if(any(decalAudioLinkSideMonMin != 0.0) || any(decalAudioLinkSideMonMax != 0.0))
         {
             int band = (int)decalAudioLinkSideBand;
             float audioVal = lilMoreDecalSampleAudio(band);
-            
             float leftVal = lerp(decalAudioLinkSideMonMin.x, decalAudioLinkSideMonMax.x, audioVal);
             float rightVal = lerp(decalAudioLinkSideMonMin.y, decalAudioLinkSideMonMax.y, audioVal);
             float downVal = lerp(decalAudioLinkSideMonMin.z, decalAudioLinkSideMonMax.z, audioVal);
             float upVal = lerp(decalAudioLinkSideMonMin.w, decalAudioLinkSideMonMax.w, audioVal);
-            
             float offsetX = rightVal - leftVal;
             float offsetY = upVal - downVal;
-            
             localTexST.z += offsetX;
             localTexST.w += offsetY;
         }
         
-        // Modulate decal rotation by AudioLink (input in degrees; convert to radians)
         if(any(decalAudioLinkRotation != 0.0))
         {
             int band = (int)decalAudioLinkRotationBand;
             float audioVal = lilMoreDecalSampleAudio(band);
-
             float rotDeg = lerp(decalAudioLinkRotation.x, decalAudioLinkRotation.y, audioVal);
             const float DEG2RAD = 0.017453292519943295;
             float rotAngle = rotDeg * DEG2RAD;
@@ -177,43 +157,27 @@ void lilApplyDecal(
         {
             int band = (int)decalAudioLinkChronoRotationBand;
             int motionType = (int)decalAudioLinkChronoMotionType;
-
-            // Prefer AudioLink chronotensity if available: offsetX is taken from motionType (0..7)
             float chronoRad = 0.0;
             #if defined(LIL_FEATURE_AUDIOLINK)
                 chronoRad = lilMoreDecalSampleChronoRad(motionType, band);
             #endif
 
-            // Follows Poiyomi: AudioLink chrono value is used as time-like value (decode/100000.0)
-            // and Poiyomi computes degrees = chronoTime * speed * 360. Convert to radians before adding.
-            // Map user input speed so that input=0.1 behaves like 0.0001 (scale factor = 0.001)
-            const float CHRONO_SPEED_INPUT_SCALE = 0.001;
-            const float CHRONO_FALLBACK_SCALE = 0.1; // reduce fallback per-frame rotation
+            const float CHRONO_SPEED_INPUT_SCALE = 0.001; // UI入力を0.001倍 (0.1 -> 0.0001)
+            const float CHRONO_FALLBACK_SCALE = 0.1;
 
             if(chronoRad != 0.0)
             {
                 const float DEG2RAD = 0.017453292519943295;
-                float chronoTime = chronoRad; // already decode/100000.0
-                // apply input scaling so `_ChronoRotationSpeed` entered as 0.1 -> effective 0.0001
+                float chronoTime = chronoRad;
                 float deg = chronoTime * (decalAudioLinkChronoRotationSpeed * CHRONO_SPEED_INPUT_SCALE) * 360.0;
                 decalTexAngle += deg * DEG2RAD;
             }
             else
             {
-                // Fallback: time-based behavior (existing logic)
                 float audioVal = lilMoreDecalSampleAudio(band);
-
-                // Compute rotation as an incremental step (degrees) per-frame using unity_DeltaTime.w
-                // This allows shader-side accumulation when combined with an external persistent source
-                // (AudioLink chronotensity) or to behave as a framerate-independent incremental rotation
                 float deltaSec = unity_DeltaTime.w;
-                // Interpret rotation speed as degrees/sec but apply input scaling and reduce to make motion subtle
-                float baseRotation = (decalAudioLinkChronoRotationSpeed * CHRONO_SPEED_INPUT_SCALE) * deltaSec * CHRONO_FALLBACK_SCALE; // degrees per-frame (scaled)
-
+                float baseRotation = (decalAudioLinkChronoRotationSpeed * CHRONO_SPEED_INPUT_SCALE) * deltaSec * CHRONO_FALLBACK_SCALE;
                 float totalRotation = baseRotation;
-
-                // motion-type modulation (new behaviors per user request)
-                // threshold for "一定以上"
                 const float TH = 0.5;
                 if(motionType == 0)
                 {
