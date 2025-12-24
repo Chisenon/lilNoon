@@ -435,7 +435,14 @@ namespace lilToon
                             if(decalAudioLinkChronoMotionType[index] != null)
                             {
                                 int curType = (int)decalAudioLinkChronoMotionType[index].floatValue;
-                                string[] chronoOptions = new string[] {"None","Sine","Step","PingPong","Random"};
+                                string[] chronoOptions = new string[] {
+                                    "Stop when band high (immediate)",
+                                    "Stop when band high (smooth)",
+                                    "Reverse when band high (immediate)",
+                                    "Reverse when band high (smooth)",
+                                    "Start on band high (immediate)",
+                                    "Start on band high (smooth)"
+                                };
                                 EditorGUI.BeginChangeCheck();
                                 curType = EditorGUILayout.Popup(Event.current.alt ? decalAudioLinkChronoMotionType[index].name + ".x" : "Chrono motion type", curType, chronoOptions);
                                 if(EditorGUI.EndChangeCheck())

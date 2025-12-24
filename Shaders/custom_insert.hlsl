@@ -59,6 +59,43 @@ float lilMoreDecalSampleAudio(int band)
     #endif
 }
 
+// Decode AudioLink packed uint stored in _AudioTexture at given pixel coords
+uint lilMoreDecalAudioLinkDecodeUInt(int px, int py)
+{
+    #if defined(LIL_FEATURE_AUDIOLINK)
+        // sample texel center
+        float2 uv = (float2(px, py) + 0.5) * _AudioTexture_TexelSize.xy;
+        // use point sampling to get raw cell
+        float4 s = LIL_SAMPLE_2D(_AudioTexture, lil_sampler_linear_clamp, uv);
+        // AudioLink packs ~10 bits per channel (0..1023). Reconstruct uint as Poiyomi does.
+        uint r = (uint)floor(s.r * 1023.0 + 0.5);
+        uint g = (uint)floor(s.g * 1023.0 + 0.5);
+        uint b = (uint)floor(s.b * 1023.0 + 0.5);
+        uint a = (uint)floor(s.a * 1023.0 + 0.5);
+        return r + (g << 10) + (b << 20) + (a << 30);
+    #else
+        return 0u;
+    #endif
+}
+
+// Read chronotensity and convert to a radian value in range ~[0;2PI]
+float lilMoreDecalSampleChronoRad(int offsetX, int band)
+{
+    #if defined(LIL_FEATURE_AUDIOLINK)
+        if(!lilCheckAudioLink()) return 0.0;
+        // ALPASS_CHRONOTENSITY base coords (AudioLink spec): uint2(16,28)
+        const int baseX = 16;
+        const int baseY = 28;
+        int px = baseX + clamp(offsetX, 0, 7);
+        int py = baseY + clamp(band, 0, 3);
+        uint u = lilMoreDecalAudioLinkDecodeUInt(px, py);
+        // Return AudioLink chrono raw time value (Poiyomi: decode / 100000.0)
+        return (float(u) / 100000.0);
+    #else
+        return 0.0;
+    #endif
+}
+
 void lilApplyDecal(
     inout lilFragData fd,
     float2 uv,
@@ -78,7 +115,10 @@ void lilApplyDecal(
     float4 decalAudioLinkSideMonMin,
     float4 decalAudioLinkSideMonMax,
     float decalAudioLinkRotationBand,
-    float2 decalAudioLinkRotation
+    float2 decalAudioLinkRotation,
+    float decalAudioLinkChronoRotationBand,
+    float decalAudioLinkChronoMotionType,
+    float decalAudioLinkChronoRotationSpeed
     LIL_SAMP_IN_FUNC(samp))
 {
     float4 localTexST = decalTex_ST;
@@ -131,6 +171,86 @@ void lilApplyDecal(
             const float DEG2RAD = 0.017453292519943295;
             float rotAngle = rotDeg * DEG2RAD;
             decalTexAngle += rotAngle;
+        }
+        
+        if(decalAudioLinkChronoRotationSpeed != 0.0)
+        {
+            int band = (int)decalAudioLinkChronoRotationBand;
+            int motionType = (int)decalAudioLinkChronoMotionType;
+
+            // Prefer AudioLink chronotensity if available: offsetX is taken from motionType (0..7)
+            float chronoRad = 0.0;
+            #if defined(LIL_FEATURE_AUDIOLINK)
+                chronoRad = lilMoreDecalSampleChronoRad(motionType, band);
+            #endif
+
+            // Follows Poiyomi: AudioLink chrono value is used as time-like value (decode/100000.0)
+            // and Poiyomi computes degrees = chronoTime * speed * 360. Convert to radians before adding.
+            // Map user input speed so that input=0.1 behaves like 0.0001 (scale factor = 0.001)
+            const float CHRONO_SPEED_INPUT_SCALE = 0.001;
+            const float CHRONO_FALLBACK_SCALE = 0.1; // reduce fallback per-frame rotation
+
+            if(chronoRad != 0.0)
+            {
+                const float DEG2RAD = 0.017453292519943295;
+                float chronoTime = chronoRad; // already decode/100000.0
+                // apply input scaling so `_ChronoRotationSpeed` entered as 0.1 -> effective 0.0001
+                float deg = chronoTime * (decalAudioLinkChronoRotationSpeed * CHRONO_SPEED_INPUT_SCALE) * 360.0;
+                decalTexAngle += deg * DEG2RAD;
+            }
+            else
+            {
+                // Fallback: time-based behavior (existing logic)
+                float audioVal = lilMoreDecalSampleAudio(band);
+
+                // Compute rotation as an incremental step (degrees) per-frame using unity_DeltaTime.w
+                // This allows shader-side accumulation when combined with an external persistent source
+                // (AudioLink chronotensity) or to behave as a framerate-independent incremental rotation
+                float deltaSec = unity_DeltaTime.w;
+                // Interpret rotation speed as degrees/sec but apply input scaling and reduce to make motion subtle
+                float baseRotation = (decalAudioLinkChronoRotationSpeed * CHRONO_SPEED_INPUT_SCALE) * deltaSec * CHRONO_FALLBACK_SCALE; // degrees per-frame (scaled)
+
+                float totalRotation = baseRotation;
+
+                // motion-type modulation (new behaviors per user request)
+                // threshold for "一定以上"
+                const float TH = 0.5;
+                if(motionType == 0)
+                {
+                    float active = (audioVal >= TH) ? 0.0 : 1.0;
+                    totalRotation = baseRotation * active;
+                }
+                else if(motionType == 1)
+                {
+                    float smoothVal = smoothstep(TH - 0.1, TH, audioVal);
+                    float factor = 1.0 - smoothVal;
+                    totalRotation = baseRotation * factor;
+                }
+                else if(motionType == 2)
+                {
+                    float dir = (audioVal >= TH) ? -1.0 : 1.0;
+                    totalRotation = baseRotation * dir;
+                }
+                else if(motionType == 3)
+                {
+                    float smoothVal = smoothstep(TH - 0.1, TH, audioVal);
+                    float dir = lerp(1.0, -1.0, smoothVal);
+                    totalRotation = baseRotation * dir;
+                }
+                else if(motionType == 4)
+                {
+                    float active = (audioVal >= TH) ? 1.0 : 0.0;
+                    totalRotation = baseRotation * active;
+                }
+                else if(motionType == 5)
+                {
+                    float smoothVal = smoothstep(TH - 0.1, TH, audioVal);
+                    totalRotation = baseRotation * smoothVal;
+                }
+
+                const float DEG2RAD = 0.017453292519943295;
+                decalTexAngle += totalRotation * DEG2RAD;
+            }
         }
     #endif
 
@@ -193,7 +313,10 @@ void lilApplyDecal(
                 _AudioLinkDecal1SideMonMin, \
                 _AudioLinkDecal1SideMonMax, \
                 _AudioLinkDecal1RotationBand, \
-                _AudioLinkDecal1Rotation \
+                _AudioLinkDecal1Rotation, \
+                _AudioLinkDecal1ChronoRotationBand, \
+                _AudioLinkDecal1ChronoMotionType, \
+                _AudioLinkDecal1ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 2) \
@@ -221,7 +344,10 @@ void lilApplyDecal(
                 _AudioLinkDecal2SideMonMin, \
                 _AudioLinkDecal2SideMonMax, \
                 _AudioLinkDecal2RotationBand, \
-                _AudioLinkDecal2Rotation \
+                _AudioLinkDecal2Rotation, \
+                _AudioLinkDecal2ChronoRotationBand, \
+                _AudioLinkDecal2ChronoMotionType, \
+                _AudioLinkDecal2ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 3) \
@@ -249,7 +375,10 @@ void lilApplyDecal(
                 _AudioLinkDecal3SideMonMin, \
                 _AudioLinkDecal3SideMonMax, \
                 _AudioLinkDecal3RotationBand, \
-                _AudioLinkDecal3Rotation \
+                _AudioLinkDecal3Rotation, \
+                _AudioLinkDecal3ChronoRotationBand, \
+                _AudioLinkDecal3ChronoMotionType, \
+                _AudioLinkDecal3ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 4) \
@@ -277,7 +406,10 @@ void lilApplyDecal(
                 _AudioLinkDecal4SideMonMin, \
                 _AudioLinkDecal4SideMonMax, \
                 _AudioLinkDecal4RotationBand, \
-                _AudioLinkDecal4Rotation \
+                _AudioLinkDecal4Rotation, \
+                _AudioLinkDecal4ChronoRotationBand, \
+                _AudioLinkDecal4ChronoMotionType, \
+                _AudioLinkDecal4ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 5) \
@@ -305,7 +437,10 @@ void lilApplyDecal(
                 _AudioLinkDecal5SideMonMin, \
                 _AudioLinkDecal5SideMonMax, \
                 _AudioLinkDecal5RotationBand, \
-                _AudioLinkDecal5Rotation \
+                _AudioLinkDecal5Rotation, \
+                _AudioLinkDecal5ChronoRotationBand, \
+                _AudioLinkDecal5ChronoMotionType, \
+                _AudioLinkDecal5ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 6) \
@@ -333,7 +468,10 @@ void lilApplyDecal(
                 _AudioLinkDecal6SideMonMin, \
                 _AudioLinkDecal6SideMonMax, \
                 _AudioLinkDecal6RotationBand, \
-                _AudioLinkDecal6Rotation \
+                _AudioLinkDecal6Rotation, \
+                _AudioLinkDecal6ChronoRotationBand, \
+                _AudioLinkDecal6ChronoMotionType, \
+                _AudioLinkDecal6ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 7) \
@@ -361,7 +499,10 @@ void lilApplyDecal(
                 _AudioLinkDecal7SideMonMin, \
                 _AudioLinkDecal7SideMonMax, \
                 _AudioLinkDecal7RotationBand, \
-                _AudioLinkDecal7Rotation \
+                _AudioLinkDecal7Rotation, \
+                _AudioLinkDecal7ChronoRotationBand, \
+                _AudioLinkDecal7ChronoMotionType, \
+                _AudioLinkDecal7ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 8) \
@@ -389,7 +530,10 @@ void lilApplyDecal(
                 _AudioLinkDecal8SideMonMin, \
                 _AudioLinkDecal8SideMonMax, \
                 _AudioLinkDecal8RotationBand, \
-                _AudioLinkDecal8Rotation \
+                _AudioLinkDecal8Rotation, \
+                _AudioLinkDecal8ChronoRotationBand, \
+                _AudioLinkDecal8ChronoMotionType, \
+                _AudioLinkDecal8ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 9) \
@@ -417,7 +561,10 @@ void lilApplyDecal(
                 _AudioLinkDecal9SideMonMin, \
                 _AudioLinkDecal9SideMonMax, \
                 _AudioLinkDecal9RotationBand, \
-                _AudioLinkDecal9Rotation \
+                _AudioLinkDecal9Rotation, \
+                _AudioLinkDecal9ChronoRotationBand, \
+                _AudioLinkDecal9ChronoMotionType, \
+                _AudioLinkDecal9ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         } \
         if(_DecalCount >= 10) \
@@ -445,7 +592,10 @@ void lilApplyDecal(
                 _AudioLinkDecal10SideMonMin, \
                 _AudioLinkDecal10SideMonMax, \
                 _AudioLinkDecal10RotationBand, \
-                _AudioLinkDecal10Rotation \
+                _AudioLinkDecal10Rotation, \
+                _AudioLinkDecal10ChronoRotationBand, \
+                _AudioLinkDecal10ChronoMotionType, \
+                _AudioLinkDecal10ChronoRotationSpeed \
                 LIL_SAMP_IN(sampler_DecalTex)); \
         }
 #endif

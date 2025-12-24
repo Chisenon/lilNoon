@@ -173,7 +173,37 @@
     float _AudioLinkDecal9RotationBand; \
     float2 _AudioLinkDecal9Rotation; \
     float _AudioLinkDecal10RotationBand; \
-    float2 _AudioLinkDecal10Rotation;
+    float2 _AudioLinkDecal10Rotation; \
+    float _AudioLinkDecal1ChronoRotationBand; \
+    float _AudioLinkDecal1ChronoMotionType; \
+    float _AudioLinkDecal1ChronoRotationSpeed; \
+    float _AudioLinkDecal2ChronoRotationBand; \
+    float _AudioLinkDecal2ChronoMotionType; \
+    float _AudioLinkDecal2ChronoRotationSpeed; \
+    float _AudioLinkDecal3ChronoRotationBand; \
+    float _AudioLinkDecal3ChronoMotionType; \
+    float _AudioLinkDecal3ChronoRotationSpeed; \
+    float _AudioLinkDecal4ChronoRotationBand; \
+    float _AudioLinkDecal4ChronoMotionType; \
+    float _AudioLinkDecal4ChronoRotationSpeed; \
+    float _AudioLinkDecal5ChronoRotationBand; \
+    float _AudioLinkDecal5ChronoMotionType; \
+    float _AudioLinkDecal5ChronoRotationSpeed; \
+    float _AudioLinkDecal6ChronoRotationBand; \
+    float _AudioLinkDecal6ChronoMotionType; \
+    float _AudioLinkDecal6ChronoRotationSpeed; \
+    float _AudioLinkDecal7ChronoRotationBand; \
+    float _AudioLinkDecal7ChronoMotionType; \
+    float _AudioLinkDecal7ChronoRotationSpeed; \
+    float _AudioLinkDecal8ChronoRotationBand; \
+    float _AudioLinkDecal8ChronoMotionType; \
+    float _AudioLinkDecal8ChronoRotationSpeed; \
+    float _AudioLinkDecal9ChronoRotationBand; \
+    float _AudioLinkDecal9ChronoMotionType; \
+    float _AudioLinkDecal9ChronoRotationSpeed; \
+    float _AudioLinkDecal10ChronoRotationBand; \
+    float _AudioLinkDecal10ChronoMotionType; \
+    float _AudioLinkDecal10ChronoRotationSpeed;
 
 // Custom textures
 #define LIL_CUSTOM_TEXTURES \
