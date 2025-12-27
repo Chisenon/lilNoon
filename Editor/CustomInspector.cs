@@ -26,6 +26,8 @@ namespace lilToon
         MaterialProperty[] decalAudioLinkSideMonMax = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkRotationBand = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkRotation = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkAnimationBand = new MaterialProperty[MAX_DECALS];
+        MaterialProperty[] decalAudioLinkAnimationUse = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkChronoRotationBand = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkChronoMotionType = new MaterialProperty[MAX_DECALS];
         MaterialProperty[] decalAudioLinkChronoRotationSpeed = new MaterialProperty[MAX_DECALS];
@@ -40,8 +42,9 @@ namespace lilToon
 
         private static bool[] isShowDecal = new bool[MAX_DECALS];
         private static bool[] isShowDecalTransform = new bool[MAX_DECALS];
-        private static bool[] isShowDecalAudioLink = new bool[MAX_DECALS];
+        private static bool[] isShowDecalTransformAudioLink = new bool[MAX_DECALS];
         private static bool[] isShowDecalAnimation = new bool[MAX_DECALS];
+        private static bool[] isShowDecalAnimationAudioLink = new bool[MAX_DECALS];
         private static bool isShowDecalCountControl = true;
         private static bool decalCountLock = true;
         private const string shaderName = "ChiseNote/MoreDecal";
@@ -68,6 +71,8 @@ namespace lilToon
                 decalAudioLinkSideMonMax[i] = FindProperty($"_AudioLinkDecal{num}SideMonMax", props, false);
                 decalAudioLinkRotationBand[i] = FindProperty($"_AudioLinkDecal{num}RotationBand", props, false);
                 decalAudioLinkRotation[i] = FindProperty($"_AudioLinkDecal{num}Rotation", props, false);
+                decalAudioLinkAnimationBand[i] = FindProperty($"_AudioLinkDecal{num}AnimationBand", props, false);
+                decalAudioLinkAnimationUse[i] = FindProperty($"_AudioLinkDecal{num}AnimationUse", props, false);
                 decalAudioLinkChronoRotationBand[i] = FindProperty($"_AudioLinkDecal{num}ChronoRotationBand", props, false);
                 decalAudioLinkChronoMotionType[i] = FindProperty($"_AudioLinkDecal{num}ChronoMotionType", props, false);
                 decalAudioLinkChronoRotationSpeed[i] = FindProperty($"_AudioLinkDecal{num}ChronoRotationSpeed", props, false);
@@ -285,9 +290,9 @@ namespace lilToon
                     if(decalUseAudioLink[index] != null)
                     {
                         EditorGUILayout.Space(2);
-                        isShowDecalAudioLink[index] = FoldoutWithToggle("AudioLink", isShowDecalAudioLink[index], decalUseAudioLink[index]);
+                        isShowDecalTransformAudioLink[index] = FoldoutWithToggle("AudioLink", isShowDecalTransformAudioLink[index], decalUseAudioLink[index]);
                         
-                        if(isShowDecalAudioLink[index])
+                        if(isShowDecalTransformAudioLink[index])
                         {
                             EditorGUI.indentLevel++;
 
@@ -436,12 +441,12 @@ namespace lilToon
                             {
                                 int curType = (int)decalAudioLinkChronoMotionType[index].floatValue;
                                 string[] chronoOptions = new string[] {
-                                    "Stop when band high (immediate)",
-                                    "Stop when band high (smooth)",
+                                    "Start on band high (immediate)",
+                                    "Start on band high (smooth)",
                                     "Reverse when band high (immediate)",
                                     "Reverse when band high (smooth)",
-                                    "Start on band high (immediate)",
-                                    "Start on band high (smooth)"
+                                    "Stop when band high (immediate)",
+                                    "Stop when band high (smooth)"
                                 };
                                 EditorGUI.BeginChangeCheck();
                                 curType = EditorGUILayout.Popup(Event.current.alt ? decalAudioLinkChronoMotionType[index].name + ".x" : "Chrono motion type", curType, chronoOptions);
@@ -501,6 +506,43 @@ namespace lilToon
                     if(EditorGUI.EndChangeCheck())
                     {
                         decalAnimation[index].vectorValue = new Vector4(loopX, loopY, frames, speed);
+                    }
+                    // AudioLink (Animation)
+                    if(decalUseAudioLink[index] != null)
+                    {
+                        EditorGUILayout.Space(2);
+                        float prevAnimUse = decalAudioLinkAnimationUse[index] != null ? decalAudioLinkAnimationUse[index].floatValue : 0.0f;
+                        isShowDecalAnimationAudioLink[index] = FoldoutWithToggle("AudioLink", isShowDecalAnimationAudioLink[index], decalAudioLinkAnimationUse[index]);
+                        float newAnimUse = decalAudioLinkAnimationUse[index] != null ? decalAudioLinkAnimationUse[index].floatValue : 0.0f;
+                        if(decalAudioLinkAnimationUse[index] != null && prevAnimUse == 1.0f && newAnimUse == 0.0f)
+                        {
+                            foreach(var tgt in m_MaterialEditor.targets)
+                            {
+                                var mat = tgt as Material;
+                                if(mat != null)
+                                {
+                                    mat.SetFloat($"_AudioLinkDecal{displayNum}AnimationStart", 0.0f);
+                                    EditorUtility.SetDirty(mat);
+                                }
+                            }
+                        }
+                        if(isShowDecalAnimationAudioLink[index])
+                        {
+                            EditorGUI.indentLevel++;
+                            
+                            if(decalAudioLinkAnimationBand[index] != null)
+                            {
+                                int animBand = (int)decalAudioLinkAnimationBand[index].floatValue;
+                                string[] bandOptions = new string[] {"Bass","Low Mid","High Mid","Treble","Volume"};
+                                EditorGUI.BeginChangeCheck();
+                                animBand = EditorGUILayout.Popup("Animation Band", animBand, bandOptions);
+                                if(EditorGUI.EndChangeCheck())
+                                {
+                                    decalAudioLinkAnimationBand[index].floatValue = animBand;
+                                }
+                            }
+                            EditorGUI.indentLevel--;
+                        }
                     }
                     EditorGUILayout.EndVertical();
                     DrawLine();

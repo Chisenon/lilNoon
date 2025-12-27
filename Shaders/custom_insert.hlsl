@@ -99,6 +99,9 @@ void lilApplyDecal(
     uint decalBlendMode,
     bool decalUseAnimation,
     float4 decalAnimation,
+    float decalAudioLinkAnimationBand,
+    float decalAudioLinkAnimationUse,
+    float decalAudioLinkAnimationStart,
     float decalAudioLinkScaleBand,
     float4 decalAudioLinkScale,
     float decalAudioLinkSideBand,
@@ -112,6 +115,7 @@ void lilApplyDecal(
     LIL_SAMP_IN_FUNC(samp))
 {
     float4 localTexST = decalTex_ST;
+    float audioBandVal = 0.0;
     #if defined(LIL_FEATURE_AUDIOLINK)
         if(any(decalAudioLinkScale != 0.0))
         {
@@ -162,7 +166,7 @@ void lilApplyDecal(
                 chronoRad = lilMoreDecalSampleChronoRad(motionType, band);
             #endif
 
-            const float CHRONO_SPEED_INPUT_SCALE = 0.001; // UI入力を0.001倍 (0.1 -> 0.0001)
+            const float CHRONO_SPEED_INPUT_SCALE = 0.001; // scale chrono speed input
             const float CHRONO_FALLBACK_SCALE = 0.1;
 
             if(chronoRad != 0.0)
@@ -229,12 +233,139 @@ void lilApplyDecal(
     mask *= saturate(0.5 - abs(decalUV.y - 0.5));
     mask = saturate(mask / clamp(fwidth(mask), 0.0001, saturate(fd.nv - 0.05)));
     
-    if(decalUseAnimation)
+    if(decalUseAnimation || decalAudioLinkAnimationUse != 0.0 || decalAudioLinkAnimationStart > 0.0)
     {
         float4 decalSubParam = float4(1.0, 1.0, 0.0, 1.0);
-        decalUV = lilCalcAtlasAnimation(decalUV, decalAnimation, decalSubParam);
+
+                // Sample chronotime for band (used in both modes) and sample audio amplitude for debug/logic
+                float chronoTime = 0.0;
+                #if defined(LIL_FEATURE_AUDIOLINK)
+                    int bandIdx = clamp((int)decalAudioLinkAnimationBand, 0, 3);
+                    int chronoOffset = clamp((int)decalAudioLinkChronoMotionType, 0, 7);
+                    chronoTime = lilMoreDecalSampleChronoRad(chronoOffset, bandIdx);
+                    audioBandVal = lilMoreDecalSampleAudio((int)decalAudioLinkAnimationBand);
+                #endif
+
+#if defined(LIL_MOREDECAL_DEBUG_ANIMBAND)
+                fd.col.rgb = float3(audioBandVal, audioBandVal, audioBandVal);
+                return;
+#endif
+
+                // AnimationUse ON behavior
+                if(decalAudioLinkAnimationUse != 0.0)
+                {
+                    // Use Chrono or AnimationStart for one-shot
+                    uint totalFrames = (uint)decalAnimation.z;
+                    float fps = decalAnimation.w;
+
+                    if(chronoTime > 0.0)
+                    {
+                        // Consider chrono only if it corresponds to a recent/active event
+                        float duration = (fps <= 0.0 || totalFrames == 0u) ? -1.0 : (float)totalFrames / fps;
+                        float elapsedChrono = LIL_TIME - chronoTime;
+                        if(duration > 0.0 && elapsedChrono >= 0.0 && elapsedChrono < duration)
+                        {
+                            uint animTime = (uint)(elapsedChrono * fps) % totalFrames;
+                            decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, animTime);
+                        }
+                        else
+                        {
+                            // Fallbacks
+                            if(decalAudioLinkAnimationStart > 0.0)
+                            {
+                                if(fps <= 0.0 || totalFrames == 0u)
+                                {
+                                    decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                                }
+                                else
+                                {
+                                    float elapsed = LIL_TIME - decalAudioLinkAnimationStart;
+                                    if(elapsed >= 0.0 && elapsed < (float)totalFrames / fps)
+                                    {
+                                        uint animTime = (uint)(elapsed * fps) % totalFrames;
+                                        decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, animTime);
+                                    }
+                                    else
+                                    {
+                                        decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Amplitude-based frame mapping
+                                const float ANIM_BAND_THRESHOLD = 0.0;
+                                float bandVal = audioBandVal;
+                                if(bandVal >= ANIM_BAND_THRESHOLD && fps > 0.0 && totalFrames != 0u)
+                                {
+                                    // map amplitude [threshold..1] to animation frames [0..totalFrames-1]
+                                    float t = saturate((bandVal - ANIM_BAND_THRESHOLD) / (1.0 - ANIM_BAND_THRESHOLD));
+                                    uint animTime = (uint)(t * (float)(totalFrames - 1));
+                                    decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, animTime);
+                                }
+                                else
+                                {
+                                    // no valid trigger: freeze at first frame
+                                    decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                                }
+                            }
+                        }
+                    }
+                    else if(decalAudioLinkAnimationStart > 0.0)
+                    {
+                        // Explicit one-shot via start time
+                        if(fps <= 0.0 || totalFrames == 0u)
+                        {
+                            decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                        }
+                        else
+                        {
+                            float elapsed = LIL_TIME - decalAudioLinkAnimationStart;
+                            if(elapsed >= 0.0 && elapsed < (float)totalFrames / fps)
+                            {
+                                uint animTime = (uint)(elapsed * fps) % totalFrames;
+                                decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, animTime);
+                            }
+                            else
+                            {
+                                decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // no trigger: freeze at first frame
+                        decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, 0u);
+                    }
+                }
+                else
+                {
+                    // AnimationUse OFF: chrono or loop
+                    bool chronoActive = false;
+                    if(chronoTime > 0.0)
+                    {
+                        uint totalFrames = (uint)decalAnimation.z;
+                        float fps = decalAnimation.w;
+                        // Only consider chrono event active if it falls within the playback window
+                        if(fps > 0.0 && totalFrames != 0u)
+                        {
+                            float elapsed = LIL_TIME - chronoTime;
+                            if(elapsed >= 0.0 && elapsed < (float)totalFrames / fps)
+                            {
+                                uint animTime = (uint)(elapsed * fps) % totalFrames;
+                                decalUV = lilCalcAtlasAnimationAtAnimTime(decalUV, decalAnimation, decalSubParam, animTime);
+                                chronoActive = true;
+                            }
+                        }
+                    }
+
+                    // play loop
+                    decalUV = lilCalcAtlasAnimation(decalUV, decalAnimation, decalSubParam);
+                    
+                    // (Ignore AnimationStart triggers when AnimationUse is OFF)
+        }
     }
-    
+
     float4 decalSample = LIL_SAMPLE_2D(decalTex, samp, decalUV);
     
     if(decalTexIsMSDF) decalSample = float4(1.0, 1.0, 1.0, lilMSDF(decalSample.rgb));
@@ -243,6 +374,15 @@ void lilApplyDecal(
     
     float3 decalCol = decalSample.rgb * decalColor.rgb;
     float decalAlpha = decalSample.a * decalColor.a;
+    #if defined(LIL_FEATURE_AUDIOLINK)
+        // If Animation Band audio value is present and AudioLink AnimationUse enabled,
+        // apply a simple brightness modulation so band selection visibly affects decal color.
+        if(decalAudioLinkAnimationUse != 0.0 && audioBandVal > 0.0)
+        {
+            float brighten = lerp(1.0, 1.5, audioBandVal);
+            decalCol *= brighten;
+        }
+    #endif
     
     if(decalAlpha > 0.001)
     {
@@ -271,6 +411,9 @@ void lilApplyDecal(
                 _Decal1BlendMode, \
                 _Decal1UseAnimation, \
                 _Decal1TexDecalAnimation, \
+                _AudioLinkDecal1AnimationBand, \
+                _AudioLinkDecal1AnimationUse, \
+                _AudioLinkDecal1AnimationStart, \
                 _AudioLinkDecal1ScaleBand, \
                 _AudioLinkDecal1Scale, \
                 _AudioLinkDecal1SideBand, \
@@ -302,6 +445,9 @@ void lilApplyDecal(
                 _Decal2BlendMode, \
                 _Decal2UseAnimation, \
                 _Decal2TexDecalAnimation, \
+                _AudioLinkDecal2AnimationBand, \
+                _AudioLinkDecal2AnimationUse, \
+                _AudioLinkDecal2AnimationStart, \
                 _AudioLinkDecal2ScaleBand, \
                 _AudioLinkDecal2Scale, \
                 _AudioLinkDecal2SideBand, \
@@ -333,6 +479,9 @@ void lilApplyDecal(
                 _Decal3BlendMode, \
                 _Decal3UseAnimation, \
                 _Decal3TexDecalAnimation, \
+                _AudioLinkDecal3AnimationBand, \
+                _AudioLinkDecal3AnimationUse, \
+                _AudioLinkDecal3AnimationStart, \
                 _AudioLinkDecal3ScaleBand, \
                 _AudioLinkDecal3Scale, \
                 _AudioLinkDecal3SideBand, \
@@ -364,6 +513,9 @@ void lilApplyDecal(
                 _Decal4BlendMode, \
                 _Decal4UseAnimation, \
                 _Decal4TexDecalAnimation, \
+                _AudioLinkDecal4AnimationBand, \
+                _AudioLinkDecal4AnimationUse, \
+                _AudioLinkDecal4AnimationStart, \
                 _AudioLinkDecal4ScaleBand, \
                 _AudioLinkDecal4Scale, \
                 _AudioLinkDecal4SideBand, \
@@ -395,6 +547,9 @@ void lilApplyDecal(
                 _Decal5BlendMode, \
                 _Decal5UseAnimation, \
                 _Decal5TexDecalAnimation, \
+                _AudioLinkDecal5AnimationBand, \
+                _AudioLinkDecal5AnimationUse, \
+                _AudioLinkDecal5AnimationStart, \
                 _AudioLinkDecal5ScaleBand, \
                 _AudioLinkDecal5Scale, \
                 _AudioLinkDecal5SideBand, \
@@ -426,6 +581,9 @@ void lilApplyDecal(
                 _Decal6BlendMode, \
                 _Decal6UseAnimation, \
                 _Decal6TexDecalAnimation, \
+                _AudioLinkDecal6AnimationBand, \
+                _AudioLinkDecal6AnimationUse, \
+                _AudioLinkDecal6AnimationStart, \
                 _AudioLinkDecal6ScaleBand, \
                 _AudioLinkDecal6Scale, \
                 _AudioLinkDecal6SideBand, \
@@ -457,6 +615,9 @@ void lilApplyDecal(
                 _Decal7BlendMode, \
                 _Decal7UseAnimation, \
                 _Decal7TexDecalAnimation, \
+                _AudioLinkDecal7AnimationBand, \
+                _AudioLinkDecal7AnimationUse, \
+                _AudioLinkDecal7AnimationStart, \
                 _AudioLinkDecal7ScaleBand, \
                 _AudioLinkDecal7Scale, \
                 _AudioLinkDecal7SideBand, \
@@ -488,6 +649,9 @@ void lilApplyDecal(
                 _Decal8BlendMode, \
                 _Decal8UseAnimation, \
                 _Decal8TexDecalAnimation, \
+                _AudioLinkDecal8AnimationBand, \
+                _AudioLinkDecal8AnimationUse, \
+                _AudioLinkDecal8AnimationStart, \
                 _AudioLinkDecal8ScaleBand, \
                 _AudioLinkDecal8Scale, \
                 _AudioLinkDecal8SideBand, \
@@ -519,6 +683,9 @@ void lilApplyDecal(
                 _Decal9BlendMode, \
                 _Decal9UseAnimation, \
                 _Decal9TexDecalAnimation, \
+                _AudioLinkDecal9AnimationBand, \
+                _AudioLinkDecal9AnimationUse, \
+                _AudioLinkDecal9AnimationStart, \
                 _AudioLinkDecal9ScaleBand, \
                 _AudioLinkDecal9Scale, \
                 _AudioLinkDecal9SideBand, \
@@ -550,6 +717,9 @@ void lilApplyDecal(
                 _Decal10BlendMode, \
                 _Decal10UseAnimation, \
                 _Decal10TexDecalAnimation, \
+                _AudioLinkDecal10AnimationBand, \
+                _AudioLinkDecal10AnimationUse, \
+                _AudioLinkDecal10AnimationStart, \
                 _AudioLinkDecal10ScaleBand, \
                 _AudioLinkDecal10Scale, \
                 _AudioLinkDecal10SideBand, \

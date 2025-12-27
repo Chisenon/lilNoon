@@ -21,6 +21,9 @@
         [lilEnum]       _AudioLinkDecal1ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal1ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal1ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal1AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal1AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal1AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal1UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal1TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal1ShouldCopy   ("Copy", Int) = 0
@@ -47,6 +50,9 @@
         [lilEnum]       _AudioLinkDecal2ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal2ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal2ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal2AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal2AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal2AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal2UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal2TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal2ShouldCopy   ("Copy", Int) = 0
@@ -73,6 +79,9 @@
         [lilEnum]       _AudioLinkDecal3ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal3ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal3ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal3AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal3AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal3AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal3UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal3TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal3ShouldCopy   ("Copy", Int) = 0
@@ -99,6 +108,9 @@
         [lilEnum]       _AudioLinkDecal4ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal4ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal4ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal4AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal4AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal4AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal4UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal4TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal4ShouldCopy   ("Copy", Int) = 0
@@ -125,6 +137,9 @@
         [lilEnum]       _AudioLinkDecal5ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal5ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal5ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal5AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal5AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal5AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal5UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal5TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal5ShouldCopy   ("Copy", Int) = 0
@@ -151,6 +166,9 @@
         [lilEnum]       _AudioLinkDecal6ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal6ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal6ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal6AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal6AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal6AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal6UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal6TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal6ShouldCopy   ("Copy", Int) = 0
@@ -177,6 +195,9 @@
         [lilEnum]       _AudioLinkDecal7ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal7ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal7ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal7AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal7AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal7AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal7UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal7TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal7ShouldCopy   ("Copy", Int) = 0
@@ -203,6 +224,9 @@
         [lilEnum]       _AudioLinkDecal8ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal8ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal8ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal8AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal8AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal8AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal8UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal8TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal8ShouldCopy   ("Copy", Int) = 0
@@ -229,6 +253,9 @@
         [lilEnum]       _AudioLinkDecal9ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal9ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal9ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal9AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal9AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal9AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal9UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal9TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal9ShouldCopy   ("Copy", Int) = 0
@@ -255,6 +282,9 @@
         [lilEnum]       _AudioLinkDecal10ChronoRotationBand ("Chrono Rotation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
         [lilEnum]       _AudioLinkDecal10ChronoMotionType ("Chrono motion type|None|Sine|Step|PingPong|Random", Int) = 0
                         _AudioLinkDecal10ChronoRotationSpeed ("Chrono Rotation Speed", Float) = 0
+        [lilEnum]       _AudioLinkDecal10AnimationBand ("Animation Band|Bass|Low Mid|High Mid|Treble|Volume", Int) = 0
+        [lilToggle]     _AudioLinkDecal10AnimationUse ("AudioLink Trigger Animation", Int) = 0
+                        _AudioLinkDecal10AnimationStart ("Animation Start", Float) = 0
         [lilToggle]     _Decal10UseAnimation ("Animation", Int) = 0
         [lilDecalAnim]  _Decal10TexDecalAnimation ("sDecalAnimations", Vector) = (1,1,1,30)
         [lilToggle]     _Decal10ShouldCopy  ("Copy", Int) = 0
@@ -263,3 +293,9 @@
         [lilEnum]       _Decal10BlendMode   ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
         [lilEnum]       _Decal10Tex_UVMode  ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
         [lilToggle]     _Decal10SyncScale   ("Sync Scale X/Y", Int) = 0
+        
+        //----------------------------------------------------------------------------------------------------------------------
+        // MoreDecal: Animation tuning
+        _MoreDecal_AnimBandThreshold ("Anim Band Threshold", Float) = 0.05
+        _MoreDecal_AnimBandGain ("Anim Band Gain", Float) = 1.0
+        _MoreDecal_AnimBandGamma ("Anim Band Gamma", Float) = 1.0
