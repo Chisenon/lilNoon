@@ -545,10 +545,8 @@ namespace lilToon
                         }
                     }
                     EditorGUILayout.EndVertical();
-                    DrawLine();
                 }
 
-                    DrawLine();
                     EditorGUI.indentLevel--;
 
                 EditorGUILayout.EndVertical();

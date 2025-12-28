@@ -233,7 +233,7 @@ void lilApplyDecal(
     mask *= saturate(0.5 - abs(decalUV.y - 0.5));
     mask = saturate(mask / clamp(fwidth(mask), 0.0001, saturate(fd.nv - 0.05)));
     
-    if(decalUseAnimation || decalAudioLinkAnimationUse != 0.0 || decalAudioLinkAnimationStart > 0.0)
+    if(decalUseAnimation)
     {
         float4 decalSubParam = float4(1.0, 1.0, 0.0, 1.0);
 
